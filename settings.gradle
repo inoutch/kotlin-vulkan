@@ -1,0 +1,2 @@
+rootProject.name = "kotlin-vulkan"
+enableFeaturePreview("GRADLE_METADATA")
