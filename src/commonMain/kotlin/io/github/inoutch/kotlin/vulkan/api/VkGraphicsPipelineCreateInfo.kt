@@ -16,6 +16,6 @@ class VkGraphicsPipelineCreateInfo(
     val layout: VkPipelineLayout,
     val renderPass: VkRenderPass,
     val subpass: Int, // the index of the subpass in the render pass where this pipeline will be used
-    val basePipelineHandle: VkPipeline,
+    val basePipelineHandle: VkPipeline?,
     val basePipelineIndex: Int
 )

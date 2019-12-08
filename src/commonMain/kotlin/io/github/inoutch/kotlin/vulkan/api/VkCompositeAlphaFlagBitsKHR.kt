@@ -1,6 +1,6 @@
 package io.github.inoutch.kotlin.vulkan.api
 
-enum class VkCompositeAlphaFlagBitsKHR(val value: Int) {
+enum class VkCompositeAlphaFlagBitsKHR(val bit: Int) {
     VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR(0x00000001),
     VK_COMPOSITE_ALPHA_PRE_MULTIPLIED_BIT_KHR(0x00000002),
     VK_COMPOSITE_ALPHA_POST_MULTIPLIED_BIT_KHR(0x00000004),

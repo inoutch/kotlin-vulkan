@@ -1,17 +1,41 @@
 package io.github.inoutch.kotlin.vulkan.api
 
+import io.github.inoutch.kotlin.vulkan.utility.MappedMemory
+import io.github.inoutch.kotlin.vulkan.utility.MutableProperty
+
+const val VK_LOD_CLAMP_NONE = 1000.0f
+const val VK_REMAINING_MIP_LEVELS = 0.inv()
+const val VK_REMAINING_ARRAY_LAYERS = 0.inv()
+const val VK_WHOLE_SIZE = 0L.inv()
+const val VK_ATTACHMENT_UNUSED = 0.inv()
+const val VK_TRUE = 1
+const val VK_FALSE = 0
+const val VK_QUEUE_FAMILY_IGNORED = 0.inv()
+const val VK_SUBPASS_EXTERNAL = 0.inv()
+const val VK_MAX_PHYSICAL_DEVICE_NAME_SIZE = 256
+const val VK_UUID_SIZE = 16
+const val VK_MAX_MEMORY_TYPES = 32
+const val VK_MAX_MEMORY_HEAPS = 16
+const val VK_MAX_EXTENSION_NAME_SIZE = 256
+const val VK_MAX_DESCRIPTION_SIZE = 256
+
+@Suppress("ClassName")
 expect object vk {
-    fun createBuffer(device: VkDevice, createInfo: VkBufferCreateInfo): VkBuffer
+    fun createBuffer(device: VkDevice, createInfo: VkBufferCreateInfo, buffer: MutableProperty<VkBuffer>): VkResult
 
     fun destroyBuffer(device: VkDevice, buffer: VkBuffer)
 
-    fun createBufferView(device: VkDevice, createInfo: VkBufferViewCreateInfo): VkBufferView
+    fun createBufferView(device: VkDevice, createInfo: VkBufferViewCreateInfo, view: MutableProperty<VkBufferView>): VkResult
 
-    fun allocateCommandBuffers(device: VkDevice, allocateInfo: VkCommandBufferAllocateInfo): List<VkCommandBuffer>
+    fun destroyBufferView(device: VkDevice, bufferView: VkBufferView)
 
-    fun beginCommandBuffer(commandBuffer: VkCommandBuffer, beginInfo: VkCommandBufferBeginInfo)
+    fun allocateCommandBuffers(device: VkDevice, allocateInfo: VkCommandBufferAllocateInfo, commandBuffers: MutableList<VkCommandBuffer>): VkResult
 
-    fun endCommandBuffer(commandBuffer: VkCommandBuffer)
+    fun freeCommandBuffers(device: VkDevice, commandPool: VkCommandPool, commandBuffers: List<VkCommandBuffer>)
+
+    fun beginCommandBuffer(commandBuffer: VkCommandBuffer, beginInfo: VkCommandBufferBeginInfo): VkResult
+
+    fun endCommandBuffer(commandBuffer: VkCommandBuffer): VkResult
 
     fun cmdBeginRenderPass(commandBuffer: VkCommandBuffer, beginInfo: VkRenderPassBeginInfo, contents: VkSubpassContents)
 
@@ -41,7 +65,7 @@ expect object vk {
         commandBuffer: VkCommandBuffer,
         image: VkImage,
         imageLayout: VkImageLayout,
-        clearColor: Vector4,
+        clearColor: VkClearColorValue,
         ranges: List<VkImageSubresourceRange>
     )
 
@@ -51,11 +75,6 @@ expect object vk {
         imageLayout: VkImageLayout,
         depthStencilValue: VkClearDepthStencilValue,
         ranges: List<VkImageSubresourceRange>
-    )
-
-    fun resetCommandBuffer(
-        commandBuffer: VkCommandBuffer,
-        flags: List<VkCommandBufferResetFlagBits>
     )
 
     fun cmdCopyBufferToImage(
@@ -75,114 +94,175 @@ expect object vk {
         dynamicOffsets: List<Int>
     )
 
-    fun createCommandPool(device: VkDevice, createInfo: VkCommandPoolCreateInfo): VkCommandPool
+    fun resetCommandBuffer(
+        commandBuffer: VkCommandBuffer,
+        flags: List<VkCommandBufferResetFlagBits>
+    )
 
-    fun createDescriptorPool(device: VkDevice, createInfo: VkDescriptorPoolCreateInfo): VkDescriptorPool
+    fun createCommandPool(device: VkDevice, createInfo: VkCommandPoolCreateInfo, commandPool: MutableProperty<VkCommandPool>): VkResult
 
-    fun allocateDescriptorSets(device: VkDevice, allocateInfo: VkDescriptorSetAllocateInfo): List<VkDescriptorSet>
+    fun destroyCommandPool(device: VkDevice, commandPool: VkCommandPool)
 
-    fun updateDescriptorSets(device: VkDevice, descriptorWrites: List<VkWriteDescriptorSet>, descriptorCopies: List<VkCopyDescriptorSet>)
+    fun createDescriptorPool(device: VkDevice, createInfo: VkDescriptorPoolCreateInfo, descriptorPool: MutableProperty<VkDescriptorPool>): VkResult
+
+    fun destroyDescriptorPool(device: VkDevice, descriptorPool: VkDescriptorPool)
+
+    fun allocateDescriptorSets(device: VkDevice, allocateInfo: VkDescriptorSetAllocateInfo, descriptorSets: MutableList<VkDescriptorSet>): VkResult
+
+    fun freeDescriptorSets(device: VkDevice, descriptorPool: VkDescriptorPool, descriptorSets: List<VkDescriptorSet>): VkResult
+
+    fun updateDescriptorSets(device: VkDevice, descriptorWrites: List<VkWriteDescriptorSet>, descriptorCopies: MutableList<VkCopyDescriptorSet>)
 
     fun createDescriptorSetLayout(
         device: VkDevice,
-        createInfo: VkDescriptorSetLayoutCreateInfo
-    ): VkDescriptorSetLayout
+        createInfo: VkDescriptorSetLayoutCreateInfo,
+        setLayout: MutableProperty<VkDescriptorSetLayout>
+    ): VkResult
+
+    fun destroyDescriptorSetLayout(device: VkDevice, descriptorSetLayout: VkDescriptorSetLayout)
 
     fun createDevice(
         physicalDevice: VkPhysicalDevice,
-        createInfo: VkDeviceCreateInfo
-    ): VkDevice
+        createInfo: VkDeviceCreateInfo,
+        device: MutableProperty<VkDevice>
+    ): VkResult
 
-    fun deviceWaitIdle(device: VkDevice)
+    fun destroyDevice(device: VkDevice)
 
-    fun allocateMemory(device: VkDevice, allocateInfo: VkMemoryAllocateInfo): VkDeviceMemory
+    fun deviceWaitIdle(device: VkDevice): VkResult
 
-    fun bindBufferMemory(device: VkDevice, buffer: VkBuffer, memory: VkDeviceMemory, memoryOffset: Long)
+    fun allocateMemory(device: VkDevice, allocateInfo: VkMemoryAllocateInfo, memory: MutableProperty<VkDeviceMemory>): VkResult
 
-    fun mapMemory(device: VkDevice, memory: VkDeviceMemory, offset: Long, size: Long, flags: List<VkPipelineStageFlagBits>): MappedMemory
+    fun bindBufferMemory(device: VkDevice, buffer: VkBuffer, memory: VkDeviceMemory, memoryOffset: Long): VkResult
 
-    fun createFence(device: VkDevice, createInfo: VkFenceCreateInfo): VkFence
+    fun mapMemory(device: VkDevice, memory: VkDeviceMemory, offset: Long, size: Long, flags: List<VkPipelineStageFlagBits>, data: MutableProperty<MappedMemory>): VkResult
 
-    fun waitForFences(device: VkDevice, fences: List<VkFence>, waitAll: Boolean, timeout: Long)
+    fun unmapMemory(device: VkDevice, memory: VkDeviceMemory)
 
-    fun resetFences(device: VkDevice, fences: List<VkFence>)
+    fun freeMemory(device: VkDevice, memory: VkDeviceMemory)
 
-    fun getPhysicalDeviceFormatProperties(physicalDevice: VkPhysicalDevice, format: VkFormat): VkFormatProperties
+    fun createFence(device: VkDevice, createInfo: VkFenceCreateInfo, fence: MutableProperty<VkFence>): VkResult
 
-    fun createFramebuffer(device: VkDevice, createInfo: VkFramebufferCreateInfo): VkFramebuffer
+    fun destroyFence(device: VkDevice, fence: VkFence)
 
-    fun createImage(device: VkDevice, createInfo: VkImageCreateInfo): VkImage
+    fun waitForFences(device: VkDevice, fences: List<VkFence>, waitAll: Boolean, timeout: Long): VkResult
 
-    fun bindImageMemory(device: VkDevice, image: VkImage, memory: VkDeviceMemory, memoryOffset: Long)
+    fun resetFences(device: VkDevice, fences: List<VkFence>): VkResult
 
-    fun createImageView(device: VkDevice, createInfo: VkImageViewCreateInfo): VkImageView
+    fun getPhysicalDeviceFormatProperties(physicalDevice: VkPhysicalDevice, format: VkFormat, formatProperties: MutableProperty<VkFormatProperties>)
 
-    fun createInstance(createInfo: VkInstanceCreateInfo): VkInstance
+    fun createFramebuffer(device: VkDevice, createInfo: VkFramebufferCreateInfo, framebuffer: MutableProperty<VkFramebuffer>): VkResult
 
-    fun getBufferMemoryRequirements(device: VkDevice, buffer: VkBuffer): VkMemoryRequirements
+    fun destroyFramebuffer(device: VkDevice, framebuffer: VkFramebuffer)
 
-    fun getImageMemoryRequirements(device: VkDevice, image: VkImage): VkMemoryRequirements
+    fun createImage(device: VkDevice, createInfo: VkImageCreateInfo, image: MutableProperty<VkImage>): VkResult
 
-    fun enumeratePhysicalDevices(instance: VkInstance): List<VkPhysicalDevice>
+    fun destroyImage(device: VkDevice, image: VkImage)
 
-    fun getPhysicalDeviceMemoryProperties(physicalDevice: VkPhysicalDevice): VkPhysicalDeviceMemoryProperties
+    fun bindImageMemory(device: VkDevice, image: VkImage, memory: VkDeviceMemory, memoryOffset: Long): VkResult
 
-    fun getPhysicalDeviceProperties(physicalDevice: VkPhysicalDevice): VkPhysicalDeviceProperties
+    fun createImageView(device: VkDevice, createInfo: VkImageViewCreateInfo, imageView: MutableProperty<VkImageView>): VkResult
+
+    fun destroyImageView(device: VkDevice, imageView: VkImageView)
+
+    fun createInstance(createInfo: VkInstanceCreateInfo, instance: MutableProperty<VkInstance>): VkResult
+
+    fun destroyInstance(instance: VkInstance)
+
+    fun getBufferMemoryRequirements(device: VkDevice, buffer: VkBuffer, memoryRequirements: MutableProperty<VkMemoryRequirements>)
+
+    fun getImageMemoryRequirements(device: VkDevice, image: VkImage, memoryRequirements: MutableProperty<VkMemoryRequirements>)
+
+    fun enumeratePhysicalDevices(instance: VkInstance, physicalDevices: MutableList<VkPhysicalDevice>): VkResult
+
+    fun getPhysicalDeviceMemoryProperties(physicalDevice: VkPhysicalDevice, memoryProperties: MutableProperty<VkPhysicalDeviceMemoryProperties>)
+
+    fun getPhysicalDeviceProperties(physicalDevice: VkPhysicalDevice, properties: MutableProperty<VkPhysicalDeviceProperties>)
 
     fun createGraphicsPipelines(
         device: VkDevice,
         pipelineCache: VkPipelineCache?,
-        createInfos: List<VkGraphicsPipelineCreateInfo>
-    ): VkPipeline
+        createInfos: List<VkGraphicsPipelineCreateInfo>,
+        pipeline: MutableProperty<VkPipeline>
+    ): VkResult
 
-    fun createPipelineCache(device: VkDevice, createInfo: VkPipelineCacheCreateInfo): VkPipelineCache
+    fun destroyPipeline(device: VkDevice, pipeline: VkPipeline)
 
-    fun createPipelineLayout(device: VkDevice, createInfo: VkPipelineLayoutCreateInfo): VkPipelineLayout
+    fun createPipelineCache(device: VkDevice, createInfo: VkPipelineCacheCreateInfo, pipelineCache: MutableProperty<VkPipelineCache>): VkResult
 
-    fun getDeviceQueue(device: VkDevice, queueFamilyIndex: Int, queueIndex: Int): VkQueue
+    fun destroyPipelineCache(device: VkDevice, pipelineCache: VkPipelineCache)
 
-    fun queueSubmit(queue: VkQueue, submitInfos: List<VkSubmitInfo>, fence: VkFence?)
+    fun createPipelineLayout(device: VkDevice, createInfo: VkPipelineLayoutCreateInfo, pipelineLayout: MutableProperty<VkPipelineLayout>): VkResult
 
-    fun queuePresentKHR(queue: VkQueue, presentInfo: VkPresentInfoKHR)
+    fun destroyPipelineLayout(device: VkDevice, pipelineLayout: VkPipelineLayout)
 
-    fun queueWaitIdle(queue: VkQueue)
+    fun getDeviceQueue(device: VkDevice, queueFamilyIndex: Int, queueIndex: Int, queue: MutableProperty<VkQueue>)
 
-    fun getPhysicalDeviceQueueFamilyProperties(physicalDevice: VkPhysicalDevice): List<VkQueueFamilyProperties>
+    fun queueSubmit(queue: VkQueue, submitInfos: List<VkSubmitInfo>, fence: VkFence?): VkResult
 
-    fun createRenderPass(device: VkDevice, createInfo: VkRenderPassCreateInfo): VkRenderPass
+    fun queuePresentKHR(queue: VkQueue, presentInfo: VkPresentInfoKHR): VkResult
 
-    fun createSampler(device: VkDevice, createInfo: VkSamplerCreateInfo): VkSampler
+    fun queueWaitIdle(queue: VkQueue): VkResult
 
-    fun createSemaphore(device: VkDevice, createInfo: VkSemaphoreCreateInfo): VkSemaphore
+    fun getPhysicalDeviceQueueFamilyProperties(physicalDevice: VkPhysicalDevice, queueFamilyProperties: MutableList<VkQueueFamilyProperties>)
 
-    fun createShaderModule(device: VkDevice, shaderModuleCreateInfo: VkShaderModuleCreateInfo): VkShaderModule
+    fun createRenderPass(device: VkDevice, createInfo: VkRenderPassCreateInfo, renderPass: MutableProperty<VkRenderPass>): VkResult
 
-    fun getImageSubresourceLayout(device: VkDevice, image: VkImage, subresource: VkImageSubresource): VkSubresourceLayout
+    fun destroyRenderPass(device: VkDevice, renderPass: VkRenderPass)
+
+    fun createSampler(device: VkDevice, createInfo: VkSamplerCreateInfo, sampler: MutableProperty<VkSampler>): VkResult
+
+    fun destroySampler(device: VkDevice, sampler: VkSampler)
+
+    fun createSemaphore(device: VkDevice, createInfo: VkSemaphoreCreateInfo, semaphore: MutableProperty<VkSemaphore>): VkResult
+
+    fun destroySemaphore(device: VkDevice, semaphore: VkSemaphore)
+
+    fun createShaderModule(device: VkDevice, shaderModuleCreateInfo: VkShaderModuleCreateInfo, shaderModule: MutableProperty<VkShaderModule>): VkResult
+
+    fun destroyShaderModule(device: VkDevice, shaderModule: VkShaderModule)
+
+    fun getImageSubresourceLayout(device: VkDevice, image: VkImage, subresource: VkImageSubresource, layout: MutableProperty<VkSubresourceLayout>)
 
     fun getPhysicalDeviceSurfaceSupportKHR(
         physicalDevice: VkPhysicalDevice,
         queueFamilyIndex: Int,
-        surface: VkSurface
-    ): Boolean
+        surface: VkSurface,
+        supported: MutableProperty<Boolean>
+    ): VkResult
 
     fun getPhysicalDeviceSurfacePresentModesKHR(
         physicalDevice: VkPhysicalDevice,
-        surface: VkSurface
-    ): List<VkPresentModeKHR>
+        surface: VkSurface,
+        presentModes: MutableList<VkPresentModeKHR>
+    ): VkResult
 
-    fun getPhysicalDeviceSurfaceCapabilitiesKHR(physicalDevice: VkPhysicalDevice, surface: VkSurface): VkSurfaceCapabilitiesKHR
+    fun getPhysicalDeviceSurfaceCapabilitiesKHR(
+        physicalDevice: VkPhysicalDevice,
+        surface: VkSurface,
+        surfaceCapabilities: MutableProperty<VkSurfaceCapabilitiesKHR>
+    ): VkResult
 
-    fun getPhysicalDeviceSurfaceFormatsKHR(physicalDevice: VkPhysicalDevice, surface: VkSurface): List<VkSurfaceFormatKHR>
+    fun getPhysicalDeviceSurfaceFormatsKHR(
+        physicalDevice: VkPhysicalDevice,
+        surface: VkSurface,
+        surfaceFormats: MutableList<VkSurfaceFormatKHR>
+    ): VkResult
 
-    fun createSwapchainKHR(device: VkDevice, createInfo: VkSwapchainCreateInfoKHR): VkSwapchainKHR
+    fun createSwapchainKHR(device: VkDevice, createInfo: VkSwapchainCreateInfoKHR, swapchain: MutableProperty<VkSwapchainKHR>): VkResult
 
-    fun getSwapchainImagesKHR(device: VkDevice, swapchain: VkSwapchainKHR): List<VkImage>
+    fun destroySwapchainKHR(device: VkDevice, swapchain: VkSwapchainKHR)
+
+    fun getSwapchainImagesKHR(device: VkDevice, swapchain: VkSwapchainKHR, swapchainImages: MutableList<VkImage>): VkResult
 
     fun acquireNextImageKHR(
         device: VkDevice,
         swapchain: VkSwapchainKHR,
         timeout: Long,
         semaphore: VkSemaphore,
-        fence: VkFence?
-    ): Int
+        fence: VkFence?,
+        index: MutableProperty<Int>
+    ): VkResult
+
+    fun destroySurfaceKHR(instance: VkInstance, surface: VkSurface)
 }

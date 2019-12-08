@@ -1,6 +1,6 @@
 package io.github.inoutch.kotlin.vulkan.api
 
-enum class VkSurfaceTransformFlagBitsKHR(val value: Int) {
+enum class VkSurfaceTransformFlagBitsKHR(val bit: Int) {
     VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR(0x00000001),
     VK_SURFACE_TRANSFORM_ROTATE_90_BIT_KHR(0x00000002),
     VK_SURFACE_TRANSFORM_ROTATE_180_BIT_KHR(0x00000004),

@@ -35,5 +35,13 @@ enum class VkResult(val value: Int) {
     VK_ERROR_FULL_SCREEN_EXCLUSIVE_MODE_LOST_EXT(-1000255000),
     VK_ERROR_OUT_OF_POOL_MEMORY_KHR(VK_ERROR_OUT_OF_POOL_MEMORY.value),
     VK_ERROR_INVALID_EXTERNAL_HANDLE_KHR(VK_ERROR_INVALID_EXTERNAL_HANDLE.value),
-    VK_RESULT_MAX_ENUM(0x7FFFFFFF),
+    VK_RESULT_MAX_ENUM(0x7FFFFFFF);
+    companion object {
+        private val resultMap = VkResult.values().map { it.value to it }.toMap()
+        fun getValue(value: Int): VkResult = resultMap.getValue(value)
+    }
+
+    fun isSucceeded() = this == VK_SUCCESS
 }
+
+fun Int.toVkResult() = VkResult.getValue(this)

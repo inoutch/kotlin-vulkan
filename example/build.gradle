@@ -1,0 +1,141 @@
+buildscript {
+    ext.kotlinVersion = "1.3.61"
+    ext.lwjglVersion = "3.2.2"
+    ext.kotlinVulkanVersion = "0.0.1"
+    ext.mainClassName = "io.github.inoutch.kotlin.vulkan.example.MainKt"
+    ext.extraJvmArgs = ""
+
+    repositories {
+        jcenter()
+        mavenCentral()
+        maven { url = "https://plugins.gradle.org/m2" }
+        mavenLocal()
+    }
+
+    dependencies {
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlinVersion"
+    }
+}
+
+apply plugin: "kotlin-multiplatform"
+apply plugin: "kotlin-android-extensions"
+
+repositories {
+    jcenter()
+    mavenCentral()
+    mavenLocal()
+}
+
+configurations {
+    ktlint
+}
+
+dependencies {
+    ktlint "com.pinterest:ktlint:0.35.0"
+}
+
+// jvm
+def platform = org.gradle.internal.os.OperatingSystem.current()
+switch (platform) {
+    case org.gradle.internal.os.OperatingSystem.WINDOWS:
+        project.ext.lwjglNatives = "natives-windows"
+        break
+    case org.gradle.internal.os.OperatingSystem.LINUX:
+        project.ext.lwjglNatives = "natives-linux"
+        break
+    case org.gradle.internal.os.OperatingSystem.MAC_OS:
+        project.ext.lwjglNatives = "natives-macos"
+        extraJvmArgs = ["-XstartOnFirstThread"]
+        break
+}
+
+kotlin {
+    jvm {}
+    iosArm64 {}
+    sourceSets {
+        commonMain {
+            dependencies {
+                implementation "org.jetbrains.kotlin:kotlin-stdlib-common:$kotlinVersion"
+                implementation "io.github.inoutch:kotlin-vulkan:$kotlinVulkanVersion"
+            }
+        }
+        jvmMain {
+            dependencies {
+                implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlinVersion"
+                implementation "io.github.inoutch:kotlin-vulkan-jvm:$kotlinVulkanVersion"
+
+                implementation "org.lwjgl:lwjgl:$lwjglVersion"
+                implementation "org.lwjgl:lwjgl-stb:$lwjglVersion"
+                implementation "org.lwjgl:lwjgl-glfw:$lwjglVersion"
+                implementation "org.lwjgl:lwjgl-vulkan:$lwjglVersion"
+
+                runtimeOnly "org.lwjgl:lwjgl:$lwjglVersion:$lwjglNatives"
+                runtimeOnly "org.lwjgl:lwjgl-stb:$lwjglVersion:$lwjglNatives"
+                runtimeOnly "org.lwjgl:lwjgl-glfw:$lwjglVersion:$lwjglNatives"
+                if (platform == org.gradle.internal.os.OperatingSystem.MAC_OS) {
+                    runtimeOnly "org.lwjgl:lwjgl-vulkan:$lwjglVersion:$lwjglNatives"
+                }
+            }
+        }
+        iosArm64Main {
+            dependencies {
+                implementation "org.jetbrains.kotlin:kotlin-stdlib-common:$kotlinVersion"
+                implementation "io.github.inoutch:kotlin-vulkan-iosarm64:$kotlinVulkanVersion"
+            }
+        }
+    }
+}
+
+// extra tasks
+task ktlint(type: JavaExec, group: "verification") {
+    description = "Check Kotlin code style."
+    classpath = configurations.ktlint
+    main = "com.pinterest.ktlint.Main"
+    args "src/**/*.kt"
+}
+check.dependsOn ktlint
+
+task ktlintFormat(type: JavaExec, group: "formatting") {
+    description = "Fix Kotlin code style deviations."
+    classpath = configurations.ktlint
+    main = "com.pinterest.ktlint.Main"
+    args "-F", "src/**/*.kt"
+}
+
+task runJvm(type: JavaExec) {
+    main = mainClassName
+    def target = kotlin.targets.jvm
+    def compilation = target.compilations.main
+    def classes = files(
+            compilation.runtimeDependencyFiles,
+            compilation.output.allOutputs
+    )
+    classpath = classes
+    jvmArgs extraJvmArgs
+}
+
+task compileShaders {
+    def shaderDir = "src/shaders"
+    def buildShaderDir = "${buildDir}/shaders"
+    mkdir(buildShaderDir)
+    doLast {
+        exec {
+            workingDir shaderDir
+            commandLine "glslangValidator", "-e", "main", "-V", "-o", "${buildShaderDir}/triangle.vert.spv", "triangle.vert"
+        }
+        exec {
+            workingDir shaderDir
+            commandLine "glslangValidator", "-e", "main", "-V", "-o", "${buildShaderDir}/triangle.frag.spv", "triangle.frag"
+        }
+        exec {
+            workingDir buildShaderDir
+            commandLine "hexdump", "-e", '16/1 "0x%02x," "\\n"', "triangle.vert.spv"
+            standardOutput new FileOutputStream("${buildShaderDir}/triangle.vert.hex")
+        }
+        exec {
+            workingDir buildShaderDir
+            commandLine "hexdump", "-e", '16/1 "0x%02x," "\\n"', "triangle.frag.spv"
+            standardOutput new FileOutputStream("${buildShaderDir}/triangle.frag.hex")
+        }
+    }
+}

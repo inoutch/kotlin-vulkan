@@ -1,6 +1,6 @@
 package io.github.inoutch.kotlin.vulkan.api
 
-enum class VkFormatFeatureFlagBits(val value: Int) {
+enum class VkFormatFeatureFlagBits(val bit: Int) {
     VK_FORMAT_FEATURE_SAMPLED_IMAGE_BIT(0x00000001),
     VK_FORMAT_FEATURE_STORAGE_IMAGE_BIT(0x00000002),
     VK_FORMAT_FEATURE_STORAGE_IMAGE_ATOMIC_BIT(0x00000004),

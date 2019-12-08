@@ -1,6 +1,6 @@
 package io.github.inoutch.kotlin.vulkan.api
 
-enum class VkCompareOp(value: Int) {
+enum class VkCompareOp(val value: Int) {
     VK_COMPARE_OP_NEVER(0),
     VK_COMPARE_OP_LESS(1),
     VK_COMPARE_OP_EQUAL(2),

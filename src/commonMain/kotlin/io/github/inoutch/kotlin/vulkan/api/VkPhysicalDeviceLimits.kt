@@ -53,9 +53,9 @@ class VkPhysicalDeviceLimits(
     var maxFragmentDualSrcAttachments: Int,
     var maxFragmentCombinedOutputResources: Int,
     var maxComputeSharedMemorySize: Int,
-    var maxComputeWorkGroupCount: List<Int>, // [3]
+    var maxComputeWorkGroupCount: IntArray, // [3]
     var maxComputeWorkGroupInvocations: Int,
-    var maxComputeWorkGroupSize: List<Int>, // [3]
+    var maxComputeWorkGroupSize: IntArray, // [3]
     var subPixelPrecisionBits: Int,
     var subTexelPrecisionBits: Int,
     var mipmapPrecisionBits: Int,
@@ -64,8 +64,8 @@ class VkPhysicalDeviceLimits(
     var maxSamplerLodBias: Float,
     var maxSamplerAnisotropy: Float,
     var maxViewports: Int,
-    var maxViewportDimensions: List<Int>, // [2]
-    var viewportBoundsRange: List<Float>,
+    var maxViewportDimensions: IntArray, // [2]
+    var viewportBoundsRange: FloatArray,
     var viewportSubPixelBits: Int,
     var minMemoryMapAlignment: Long,
     var minTexelBufferOffsetAlignment: VkDeviceSize,
@@ -98,8 +98,8 @@ class VkPhysicalDeviceLimits(
     var maxCullDistances: Int,
     var maxCombinedClipAndCullDistances: Int,
     var discreteQueuePriorities: Int,
-    var pointSizeRange: List<Float>,
-    var lineWidthRange: List<Float>,
+    var pointSizeRange: FloatArray,
+    var lineWidthRange: FloatArray,
     var pointSizeGranularity: Float,
     var lineWidthGranularity: Float,
     var strictLines: Boolean,
