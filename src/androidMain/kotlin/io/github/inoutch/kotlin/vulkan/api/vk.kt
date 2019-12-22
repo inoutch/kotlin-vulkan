@@ -342,7 +342,7 @@ actual object vk {
         throw UnsupportedVulkanError()
     }
 
-    actual fun acquireNextImageKHR(device: VkDevice, swapchain: VkSwapchainKHR, timeout: Long, semaphore: VkSemaphore, fence: VkFence?, index: MutableProperty<Int>): VkResult {
+    actual fun acquireNextImageKHR(device: VkDevice, swapchain: VkSwapchainKHR, timeout: Long, semaphore: VkSemaphore?, fence: VkFence?, index: MutableProperty<Int>): VkResult {
         throw UnsupportedVulkanError()
     }
 

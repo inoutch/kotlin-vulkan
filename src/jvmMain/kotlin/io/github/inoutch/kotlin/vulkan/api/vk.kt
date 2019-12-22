@@ -787,7 +787,7 @@ actual object vk {
         device: VkDevice,
         swapchain: VkSwapchainKHR,
         timeout: Long,
-        semaphore: VkSemaphore,
+        semaphore: VkSemaphore?,
         fence: VkFence?,
         index: MutableProperty<Int>
     ): VkResult = memScoped {
@@ -796,7 +796,7 @@ actual object vk {
                 device.native,
                 swapchain.native,
                 timeout,
-                semaphore.native,
+                semaphore?.native ?: VK10.VK_NULL_HANDLE,
                 fence?.native ?: VK10.VK_NULL_HANDLE, indexNative).toVkResult()
         if (result.isSucceeded()) {
             index set indexNative.get(0)

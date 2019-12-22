@@ -25,6 +25,7 @@ import io.github.inoutch.kotlin.vulkan.api.VkResult.VK_SUBOPTIMAL_KHR
 import io.github.inoutch.kotlin.vulkan.api.VkSemaphore
 import io.github.inoutch.kotlin.vulkan.api.VkSemaphoreCreateInfo
 import io.github.inoutch.kotlin.vulkan.api.VkStructureType
+import io.github.inoutch.kotlin.vulkan.api.VkStructureType.VK_STRUCTURE_TYPE_PRESENT_INFO_KHR
 import io.github.inoutch.kotlin.vulkan.api.VkSubmitInfo
 import io.github.inoutch.kotlin.vulkan.api.VkSurface
 import io.github.inoutch.kotlin.vulkan.api.VkSurfaceFormatKHR
@@ -289,7 +290,7 @@ class VK(
         vk.queueSubmit(queue, listOf(submitInfo), inFlightFences[currentFrame])
 
         val presentInfo = VkPresentInfoKHR(
-                VkStructureType.VK_STRUCTURE_TYPE_PRESENT_INFO_KHR,
+                VK_STRUCTURE_TYPE_PRESENT_INFO_KHR,
                 listOf(renderCompleteSemaphores[currentFrame]),
                 listOf(swapchainRecreator.current.swapchain),
                 listOf(currentImageIndex),

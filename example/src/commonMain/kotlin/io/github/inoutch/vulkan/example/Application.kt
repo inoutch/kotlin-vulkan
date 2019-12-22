@@ -1,20 +1,29 @@
 package io.github.inoutch.vulkan.example
 
+import io.github.inoutch.kotlin.vulkan.api.VK_QUEUE_FAMILY_IGNORED
 import io.github.inoutch.kotlin.vulkan.api.VkBlendFactor
 import io.github.inoutch.kotlin.vulkan.api.VkClearColorValue
 import io.github.inoutch.kotlin.vulkan.api.VkClearDepthStencilValue
 import io.github.inoutch.kotlin.vulkan.api.VkClearValue
 import io.github.inoutch.kotlin.vulkan.api.VkCullModeFlagBits
 import io.github.inoutch.kotlin.vulkan.api.VkDescriptorSetLayout
+import io.github.inoutch.kotlin.vulkan.api.VkImageAspectFlagBits
+import io.github.inoutch.kotlin.vulkan.api.VkImageAspectFlagBits.VK_IMAGE_ASPECT_COLOR_BIT
+import io.github.inoutch.kotlin.vulkan.api.VkImageLayout.VK_IMAGE_LAYOUT_GENERAL
+import io.github.inoutch.kotlin.vulkan.api.VkImageLayout.VK_IMAGE_LAYOUT_PRESENT_SRC_KHR
+import io.github.inoutch.kotlin.vulkan.api.VkImageMemoryBarrier
+import io.github.inoutch.kotlin.vulkan.api.VkImageSubresourceRange
 import io.github.inoutch.kotlin.vulkan.api.VkOffset2D
 import io.github.inoutch.kotlin.vulkan.api.VkPipelineBindPoint
 import io.github.inoutch.kotlin.vulkan.api.VkPipelineLayout
 import io.github.inoutch.kotlin.vulkan.api.VkPipelineLayoutCreateInfo
+import io.github.inoutch.kotlin.vulkan.api.VkPipelineStageFlagBits
 import io.github.inoutch.kotlin.vulkan.api.VkPolygonMode
 import io.github.inoutch.kotlin.vulkan.api.VkRect2D
 import io.github.inoutch.kotlin.vulkan.api.VkRenderPassBeginInfo
 import io.github.inoutch.kotlin.vulkan.api.VkShaderModule
 import io.github.inoutch.kotlin.vulkan.api.VkStructureType
+import io.github.inoutch.kotlin.vulkan.api.VkStructureType.VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER
 import io.github.inoutch.kotlin.vulkan.api.VkStructureType.VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO
 import io.github.inoutch.kotlin.vulkan.api.VkSubpassContents
 import io.github.inoutch.kotlin.vulkan.api.VkViewport
@@ -79,7 +88,35 @@ class Application(private val vkContext: VK) {
         ))
         destroyers.add { vk.destroyPipeline(vkContext.device, graphicsPipeline) }
 
-        vkContext.cmd { commandBuffer, framebuffer, _ ->
+        vkContext.cmd { commandBuffer, framebuffer, swapchainImage ->
+            val imageMemoryBarrier = VkImageMemoryBarrier(
+                    VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER,
+                    listOf(),
+                    listOf(),
+                    VK_IMAGE_LAYOUT_PRESENT_SRC_KHR,
+                    VK_IMAGE_LAYOUT_GENERAL,
+                    VK_QUEUE_FAMILY_IGNORED,
+                    VK_QUEUE_FAMILY_IGNORED,
+                    swapchainImage,
+                    VkImageSubresourceRange(listOf(VkImageAspectFlagBits.VK_IMAGE_ASPECT_COLOR_BIT), 0, 1, 0, 1)
+            )
+            vk.cmdPipelineBarrier(
+                    commandBuffer,
+                    listOf(VkPipelineStageFlagBits.VK_PIPELINE_STAGE_TRANSFER_BIT),
+                    listOf(VkPipelineStageFlagBits.VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT),
+                    listOf(),
+                    listOf(),
+                    listOf(),
+                    listOf(imageMemoryBarrier)
+            )
+            vk.cmdClearColorImage(
+                    commandBuffer,
+                    swapchainImage,
+                    VK_IMAGE_LAYOUT_GENERAL,
+                    VkClearColorValue(1, 0, 0, 1),
+                    listOf(VkImageSubresourceRange(listOf(VK_IMAGE_ASPECT_COLOR_BIT), 0, 1, 0, 1))
+            )
+
             val renderPassInfo = VkRenderPassBeginInfo(
                     VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO,
                     vkContext.renderPass,
@@ -100,7 +137,6 @@ class Application(private val vkContext: VK) {
 
     fun render() {
         vkContext.submit()
-        vkContext.mustRecreateSwapchain = true
     }
 
     fun destroy() {

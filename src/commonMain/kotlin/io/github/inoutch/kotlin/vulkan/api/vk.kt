@@ -259,7 +259,7 @@ expect object vk {
         device: VkDevice,
         swapchain: VkSwapchainKHR,
         timeout: Long,
-        semaphore: VkSemaphore,
+        semaphore: VkSemaphore?,
         fence: VkFence?,
         index: MutableProperty<Int>
     ): VkResult
