@@ -1,4 +1,4 @@
-package io.github.inoutch.vulkan.example
+package io.github.inoutch.kotlin.vulkan.example
 
 import io.github.inoutch.kotlin.vulkan.api.VK_QUEUE_FAMILY_IGNORED
 import io.github.inoutch.kotlin.vulkan.api.VK_SUBPASS_EXTERNAL

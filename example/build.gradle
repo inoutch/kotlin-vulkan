@@ -51,7 +51,11 @@ switch (platform) {
 
 kotlin {
     jvm {}
-    iosArm64 {}
+    iosArm64 {
+        binaries.executable {
+            entryPoint = "io.github.inoutch.kotlin.vulkan.example.main"
+        }
+    }
     sourceSets {
         commonMain {
             dependencies {
@@ -114,6 +118,26 @@ task runJvm(type: JavaExec) {
     jvmArgs extraJvmArgs
 }
 
+task buildAppForXcode {
+    if (isCalledFromXcode()) {
+        dependsOn kotlin.targets.iosArm64.binaries.getExecutable(getBuildTypeForXcode()).linkTask
+    }
+
+    doLast {
+        if (!isCalledFromXcode()) {
+            throw new Exception("Please run 'buildAppForXcode' task with all necessary properties!")
+        }
+
+        copy {
+            from file(kotlin.targets.iosArm64.binaries.getExecutable(getBuildTypeForXcode()).outputFile)
+            into file(getBinaryLocationForXcode().parentFile)
+            rename {
+                getBinaryLocationForXcode().name
+            }
+        }
+    }
+}
+
 task compileShaders {
     def shaderDir = "src/shaders"
     def buildShaderDir = "${buildDir}/shaders"
@@ -138,4 +162,16 @@ task compileShaders {
             standardOutput new FileOutputStream("${buildShaderDir}/triangle.frag.hex")
         }
     }
+}
+
+private boolean isCalledFromXcode() {
+    project.hasProperty("configuration.name") && project.hasProperty("binary.location")
+}
+
+private String getBuildTypeForXcode() {
+    project.properties["configuration.name"] as String
+}
+
+private File getBinaryLocationForXcode() {
+    file(project.properties["binary.location"])
 }

@@ -1,4 +1,4 @@
-package io.github.inoutch.vulkan.example.shader
+package io.github.inoutch.kotlin.vulkan.example.shader
 
 fun IntArray.toByteArray(): ByteArray {
     return foldIndexed(ByteArray(size)) { i, a, v -> a.apply { set(i, v.toByte()) } }

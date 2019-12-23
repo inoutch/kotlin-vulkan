@@ -1,4 +1,4 @@
-package io.github.inoutch.vulkan.example
+package io.github.inoutch.kotlin.vulkan.example
 
 import io.github.inoutch.kotlin.vulkan.api.VK_QUEUE_FAMILY_IGNORED
 import io.github.inoutch.kotlin.vulkan.api.VkBlendFactor
@@ -28,9 +28,9 @@ import io.github.inoutch.kotlin.vulkan.api.VkStructureType.VK_STRUCTURE_TYPE_REN
 import io.github.inoutch.kotlin.vulkan.api.VkSubpassContents
 import io.github.inoutch.kotlin.vulkan.api.VkViewport
 import io.github.inoutch.kotlin.vulkan.api.vk
+import io.github.inoutch.kotlin.vulkan.example.shader.triangleFragData
+import io.github.inoutch.kotlin.vulkan.example.shader.triangleVertData
 import io.github.inoutch.kotlin.vulkan.utility.MutableProperty
-import io.github.inoutch.vulkan.example.shader.triangleFragData
-import io.github.inoutch.vulkan.example.shader.triangleVertData
 
 class Application(private val vkContext: VK) {
     private val vertShaderModule: VkShaderModule

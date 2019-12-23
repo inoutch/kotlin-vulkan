@@ -1,4 +1,4 @@
-package io.github.inoutch.vulkan.example
+package io.github.inoutch.kotlin.vulkan.example
 
 import io.github.inoutch.kotlin.vulkan.api.VkCommandBuffer
 import io.github.inoutch.kotlin.vulkan.api.VkCommandBufferBeginInfo

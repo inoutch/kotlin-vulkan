@@ -3,8 +3,6 @@ package io.github.inoutch.kotlin.vulkan.example
 import io.github.inoutch.kotlin.vulkan.api.VkExtent2D
 import io.github.inoutch.kotlin.vulkan.api.createWindowSurface
 import io.github.inoutch.kotlin.vulkan.extension.toStringList
-import io.github.inoutch.vulkan.example.Application
-import io.github.inoutch.vulkan.example.VK
 import org.lwjgl.glfw.GLFW.GLFW_CLIENT_API
 import org.lwjgl.glfw.GLFW.GLFW_FALSE
 import org.lwjgl.glfw.GLFW.GLFW_NO_API
