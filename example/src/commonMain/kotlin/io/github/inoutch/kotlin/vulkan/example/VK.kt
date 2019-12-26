@@ -105,6 +105,8 @@ class VK(
 
     private var currentImageIndex = 0
 
+    private var currentCmd: ((commandBuffer: VkCommandBuffer, framebuffer: VkFramebuffer, swapchainImage: VkImage) -> Unit)? = null
+
     private val destroyers = mutableListOf<() -> Unit>()
 
     init {
@@ -244,6 +246,7 @@ class VK(
     }
 
     fun cmd(scope: (commandBuffer: VkCommandBuffer, framebuffer: VkFramebuffer, swapchainImage: VkImage) -> Unit) {
+        currentCmd = scope
         swapchainRecreator.current.swapchainImages.size.forEachIndexes {
             cmd(
                     swapchainRecreator.current.commandBuffers[it],
@@ -255,10 +258,17 @@ class VK(
     }
 
     fun submit(cmdScope: ((commandBuffer: VkCommandBuffer, framebuffer: VkFramebuffer, swapchainImage: VkImage) -> Unit)? = null) {
+        val currentCmd = this.currentCmd
+        if (currentCmd == null && cmdScope == null) {
+            // Do noting
+            return
+        }
+
         if (mustRecreateSwapchain) {
             vk.queueWaitIdle(queue)
             swapchainRecreator.recreate(windowSize)
             mustRecreateSwapchain = false
+            currentCmd?.let { cmd(it) }
         }
 
         vk.waitForFences(device, listOf(inFlightFences[currentFrame]), true, Long.MAX_VALUE)
@@ -309,6 +319,11 @@ class VK(
         swapchainRecreator.current.commandBuffers.forEach {
             vk.resetCommandBuffer(it, listOf())
         }
+    }
+
+    fun resize(windowSize: VkExtent2D) {
+        this.windowSize = windowSize
+        mustRecreateSwapchain = true
     }
 
     fun destroy() {

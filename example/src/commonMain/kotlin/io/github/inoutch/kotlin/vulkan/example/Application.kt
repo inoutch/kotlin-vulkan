@@ -7,6 +7,7 @@ import io.github.inoutch.kotlin.vulkan.api.VkClearDepthStencilValue
 import io.github.inoutch.kotlin.vulkan.api.VkClearValue
 import io.github.inoutch.kotlin.vulkan.api.VkCullModeFlagBits
 import io.github.inoutch.kotlin.vulkan.api.VkDescriptorSetLayout
+import io.github.inoutch.kotlin.vulkan.api.VkExtent2D
 import io.github.inoutch.kotlin.vulkan.api.VkImageAspectFlagBits
 import io.github.inoutch.kotlin.vulkan.api.VkImageAspectFlagBits.VK_IMAGE_ASPECT_COLOR_BIT
 import io.github.inoutch.kotlin.vulkan.api.VkImageLayout.VK_IMAGE_LAYOUT_GENERAL
@@ -137,6 +138,10 @@ class Application(private val vkContext: VK) {
 
     fun render() {
         vkContext.submit()
+    }
+
+    fun resize(windowSize: VkExtent2D) {
+        vkContext.resize(windowSize)
     }
 
     fun destroy() {

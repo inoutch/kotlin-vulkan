@@ -7,11 +7,15 @@ import org.lwjgl.glfw.GLFW.GLFW_CLIENT_API
 import org.lwjgl.glfw.GLFW.GLFW_FALSE
 import org.lwjgl.glfw.GLFW.GLFW_NO_API
 import org.lwjgl.glfw.GLFW.GLFW_RESIZABLE
+import org.lwjgl.glfw.GLFW.GLFW_TRUE
 import org.lwjgl.glfw.GLFW.GLFW_VISIBLE
 import org.lwjgl.glfw.GLFW.glfwCreateWindow
 import org.lwjgl.glfw.GLFW.glfwDefaultWindowHints
+import org.lwjgl.glfw.GLFW.glfwGetPrimaryMonitor
+import org.lwjgl.glfw.GLFW.glfwGetVideoMode
 import org.lwjgl.glfw.GLFW.glfwInit
 import org.lwjgl.glfw.GLFW.glfwPollEvents
+import org.lwjgl.glfw.GLFW.glfwSetFramebufferSizeCallback
 import org.lwjgl.glfw.GLFW.glfwShowWindow
 import org.lwjgl.glfw.GLFW.glfwWindowHint
 import org.lwjgl.glfw.GLFW.glfwWindowShouldClose
@@ -28,7 +32,7 @@ fun main(args: Array<String>) {
     glfwDefaultWindowHints()
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API)
     glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE)
-    glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE)
+    glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE)
 
     val title = "Kotlin Vulkan for JVM"
     val windowSize = VkExtent2D(300, 300)
@@ -42,10 +46,22 @@ fun main(args: Array<String>) {
     val logicalDeviceLayers = listOf<String>()
     val logicalDeviceExtensions = listOf("VK_KHR_swapchain")
 
-    val vk = VK(title, title, physicalDeviceLayers, physicalDeviceExtensions, logicalDeviceLayers, logicalDeviceExtensions, windowSize) { surface, instance ->
+    val vk = VK(
+            title,
+            title,
+            physicalDeviceLayers,
+            physicalDeviceExtensions,
+            logicalDeviceLayers,
+            logicalDeviceExtensions,
+            windowSize
+    ) { surface, instance ->
         createWindowSurface(instance, window, surface)
     }
+
     val application = Application(vk)
+    glfwSetFramebufferSizeCallback(window) { _, width, height ->
+        application.resize(VkExtent2D(width, height))
+    }
     glfwShowWindow(window)
 
     var lastTime = System.currentTimeMillis()

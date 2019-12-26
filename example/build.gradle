@@ -1,6 +1,6 @@
 buildscript {
     ext.kotlinVersion = "1.3.61"
-    ext.lwjglVersion = "3.2.2"
+    ext.lwjglVersion = "3.2.1"
     ext.kotlinVulkanVersion = "0.0.1"
     ext.mainClassName = "io.github.inoutch.kotlin.vulkan.example.MainKt"
     ext.extraJvmArgs = ""

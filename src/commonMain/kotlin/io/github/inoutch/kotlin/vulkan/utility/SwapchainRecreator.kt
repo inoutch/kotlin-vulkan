@@ -54,6 +54,7 @@ abstract class SwapchainRecreator(
 
     fun destroy() {
         destroyers.reversed().forEach { it.invoke() }
+        destroyers.clear()
     }
 
     private fun recreateProperties(oldSwapchain: VkSwapchainKHR?, extent: VkExtent2D): SwapchainRecreatorProperties {
