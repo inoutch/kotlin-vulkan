@@ -123,7 +123,7 @@ class Application(private val vkContext: VK) {
                     vkContext.renderPass,
                     framebuffer,
                     VkRect2D(VkOffset2D(0, 0), vkContext.swapchainExtent),
-                    listOf(VkClearValue(VkClearColorValue(1, 0, 0, 1)), VkClearValue(VkClearDepthStencilValue(0.0f, 0)))
+                    listOf(VkClearValue(VkClearColorValue(1.0f, 0.0f, 0.0f, 1.0f)), VkClearValue(VkClearDepthStencilValue(0.0f, 0)))
             )
             vk.cmdBeginRenderPass(commandBuffer, renderPassInfo, VkSubpassContents.VK_SUBPASS_CONTENTS_INLINE)
 

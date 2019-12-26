@@ -202,7 +202,7 @@ fun createRenderPass(
             emptyList(),
             surfaceFormat.format,
             listOf(VK_SAMPLE_COUNT_1_BIT),
-            VkAttachmentLoadOp.VK_ATTACHMENT_LOAD_OP_LOAD,
+            VkAttachmentLoadOp.VK_ATTACHMENT_LOAD_OP_CLEAR,
             VkAttachmentStoreOp.VK_ATTACHMENT_STORE_OP_STORE,
             VkAttachmentLoadOp.VK_ATTACHMENT_LOAD_OP_DONT_CARE,
             VkAttachmentStoreOp.VK_ATTACHMENT_STORE_OP_DONT_CARE,
@@ -213,12 +213,12 @@ fun createRenderPass(
             emptyList(),
             depthFormat,
             listOf(VK_SAMPLE_COUNT_1_BIT),
-            VkAttachmentLoadOp.VK_ATTACHMENT_LOAD_OP_LOAD,
+            VkAttachmentLoadOp.VK_ATTACHMENT_LOAD_OP_CLEAR,
             VkAttachmentStoreOp.VK_ATTACHMENT_STORE_OP_STORE,
             VkAttachmentLoadOp.VK_ATTACHMENT_LOAD_OP_DONT_CARE,
             VkAttachmentStoreOp.VK_ATTACHMENT_STORE_OP_DONT_CARE,
             initialLayout = VkImageLayout.VK_IMAGE_LAYOUT_UNDEFINED,
-            finalLayout = VkImageLayout.VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_STENCIL_READ_ONLY_OPTIMAL)
+            finalLayout = VkImageLayout.VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL)
 
     val colorAttachmentRef = VkAttachmentReference(0, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL)
     val depthAttachmentRef = VkAttachmentReference(1, VkImageLayout.VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL)
