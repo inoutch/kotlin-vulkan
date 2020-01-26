@@ -49,6 +49,13 @@ expect object vk {
 
     fun cmdBindVertexBuffers(commandBuffer: VkCommandBuffer, firstBinding: Int, buffers: List<VkBuffer>, offsets: List<Long>)
 
+    fun cmdCopyBuffer(
+        commandBuffer: VkCommandBuffer,
+        srcBuffer: VkBuffer,
+        dstBuffer: VkBuffer,
+        regions: List<VkBufferCopy>
+    )
+
     fun cmdDraw(commandBuffer: VkCommandBuffer, vertexCount: Int, instanceCount: Int, firstVertex: Int, firstInstance: Int)
 
     fun cmdPipelineBarrier(

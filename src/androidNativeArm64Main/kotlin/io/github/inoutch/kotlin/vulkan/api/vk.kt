@@ -32,6 +32,7 @@ import vulkan_android.vkCmdBindPipeline
 import vulkan_android.vkCmdBindVertexBuffers
 import vulkan_android.vkCmdClearColorImage
 import vulkan_android.vkCmdClearDepthStencilImage
+import vulkan_android.vkCmdCopyBuffer
 import vulkan_android.vkCmdCopyImageToBuffer
 import vulkan_android.vkCmdDraw
 import vulkan_android.vkCmdEndRenderPass
@@ -237,6 +238,15 @@ actual object vk {
                 buffers.size.toUInt(),
                 buffers.map { it.native }.toNative(this),
                 offsets.map { it.toULong() }.toNative(this))
+    }
+
+    actual fun cmdCopyBuffer(
+        commandBuffer: VkCommandBuffer,
+        srcBuffer: VkBuffer,
+        dstBuffer: VkBuffer,
+        regions: List<VkBufferCopy>
+    ) = memScoped {
+        vkCmdCopyBuffer(commandBuffer.native, srcBuffer.native, dstBuffer.native, regions.size.toUInt(), regions.toNative(this))
     }
 
     actual fun cmdDraw(

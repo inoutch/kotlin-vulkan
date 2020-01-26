@@ -62,6 +62,15 @@ actual object vk {
         throw UnsupportedVulkanError()
     }
 
+    actual fun cmdCopyBuffer(
+        commandBuffer: VkCommandBuffer,
+        srcBuffer: VkBuffer,
+        dstBuffer: VkBuffer,
+        regions: List<VkBufferCopy>
+    ) {
+        throw UnsupportedVulkanError()
+    }
+
     actual fun cmdDraw(commandBuffer: VkCommandBuffer, vertexCount: Int, instanceCount: Int, firstVertex: Int, firstInstance: Int) {
         throw UnsupportedVulkanError()
     }

@@ -108,6 +108,15 @@ actual object vk {
                 offsets.toLongArray())
     }
 
+    actual fun cmdCopyBuffer(
+        commandBuffer: VkCommandBuffer,
+        srcBuffer: VkBuffer,
+        dstBuffer: VkBuffer,
+        regions: List<VkBufferCopy>
+    ) = memScoped {
+        VK10.vkCmdCopyBuffer(commandBuffer.native, srcBuffer.native, dstBuffer.native, regions.toNative(this))
+    }
+
     actual fun cmdDraw(commandBuffer: VkCommandBuffer, vertexCount: Int, instanceCount: Int, firstVertex: Int, firstInstance: Int) {
         VK10.vkCmdDraw(commandBuffer.native, vertexCount, instanceCount, firstVertex, firstInstance)
     }

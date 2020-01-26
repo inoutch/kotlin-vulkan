@@ -54,6 +54,7 @@ import vulkan_ios.vkCmdBindPipeline
 import vulkan_ios.vkCmdBindVertexBuffers
 import vulkan_ios.vkCmdClearColorImage
 import vulkan_ios.vkCmdClearDepthStencilImage
+import vulkan_ios.vkCmdCopyBuffer
 import vulkan_ios.vkCmdCopyImageToBuffer
 import vulkan_ios.vkCmdDraw
 import vulkan_ios.vkCmdEndRenderPass
@@ -256,6 +257,15 @@ actual object vk {
                 buffers.size.toUInt(),
                 buffers.map { it.native }.toNative(this),
                 offsets.map { it.toULong() }.toNative(this))
+    }
+
+    actual fun cmdCopyBuffer(
+        commandBuffer: VkCommandBuffer,
+        srcBuffer: VkBuffer,
+        dstBuffer: VkBuffer,
+        regions: List<VkBufferCopy>
+    ) = memScoped {
+        vkCmdCopyBuffer(commandBuffer.native, srcBuffer.native, dstBuffer.native, regions.size.toUInt(), regions.toNative(this))
     }
 
     actual fun cmdDraw(
