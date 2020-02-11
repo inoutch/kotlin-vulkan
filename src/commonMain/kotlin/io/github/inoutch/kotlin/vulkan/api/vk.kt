@@ -118,7 +118,7 @@ expect object vk {
 
     fun freeDescriptorSets(device: VkDevice, descriptorPool: VkDescriptorPool, descriptorSets: List<VkDescriptorSet>): VkResult
 
-    fun updateDescriptorSets(device: VkDevice, descriptorWrites: List<VkWriteDescriptorSet>, descriptorCopies: MutableList<VkCopyDescriptorSet>)
+    fun updateDescriptorSets(device: VkDevice, descriptorWrites: List<VkWriteDescriptorSet>, descriptorCopies: List<VkCopyDescriptorSet>)
 
     fun createDescriptorSetLayout(
         device: VkDevice,

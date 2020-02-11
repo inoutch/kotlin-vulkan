@@ -258,7 +258,7 @@ actual object vk {
         VK10.vkFreeDescriptorSets(device.native, descriptorPool.native, descriptorSetPointers).toVkResult()
     }
 
-    actual fun updateDescriptorSets(device: VkDevice, descriptorWrites: List<VkWriteDescriptorSet>, descriptorCopies: MutableList<VkCopyDescriptorSet>) = memScoped {
+    actual fun updateDescriptorSets(device: VkDevice, descriptorWrites: List<VkWriteDescriptorSet>, descriptorCopies: List<VkCopyDescriptorSet>) = memScoped {
         VK10.vkUpdateDescriptorSets(
                 device.native,
                 descriptorWrites.toNative(this),

@@ -123,7 +123,7 @@ actual object vk {
         throw UnsupportedVulkanError()
     }
 
-    actual fun updateDescriptorSets(device: VkDevice, descriptorWrites: List<VkWriteDescriptorSet>, descriptorCopies: MutableList<VkCopyDescriptorSet>) {
+    actual fun updateDescriptorSets(device: VkDevice, descriptorWrites: List<VkWriteDescriptorSet>, descriptorCopies: List<VkCopyDescriptorSet>) {
         throw UnsupportedVulkanError()
     }
 

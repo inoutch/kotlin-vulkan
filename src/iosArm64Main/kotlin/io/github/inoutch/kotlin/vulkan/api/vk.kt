@@ -440,7 +440,7 @@ actual object vk {
     actual fun updateDescriptorSets(
         device: VkDevice,
         descriptorWrites: List<VkWriteDescriptorSet>,
-        descriptorCopies: MutableList<VkCopyDescriptorSet>
+        descriptorCopies: List<VkCopyDescriptorSet>
     ) = memScoped {
         vkUpdateDescriptorSets(
                 device.native,
