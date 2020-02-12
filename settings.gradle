@@ -1,2 +1,9 @@
-rootProject.name = "kotlin-vulkan"
+rootProject.name = "kotlin-vulkan-package"
 enableFeaturePreview("GRADLE_METADATA")
+
+include ":core"
+project(":core").name = "kotlin-vulkan"
+
+include ":example"
+project(":example").name = "kotlin-vulkan-example"
+

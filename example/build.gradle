@@ -1,30 +1,9 @@
-buildscript {
-    ext.kotlinVersion = "1.3.61"
-    ext.lwjglVersion = "3.2.1"
-    ext.kotlinVulkanVersion = "0.0.1"
-    ext.mainClassName = "io.github.inoutch.kotlin.vulkan.example.MainKt"
-    ext.extraJvmArgs = ""
-
-    repositories {
-        jcenter()
-        mavenCentral()
-        maven { url = "https://plugins.gradle.org/m2" }
-        mavenLocal()
-    }
-
-    dependencies {
-        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlinVersion"
-    }
+plugins {
+    id "kotlin-multiplatform"
 }
 
-apply plugin: "kotlin-multiplatform"
-apply plugin: "kotlin-android-extensions"
-
-repositories {
-    jcenter()
-    mavenCentral()
-    mavenLocal()
-}
+def extraJvmArgs = ""
+def mainClassName = "io.github.inoutch.kotlin.vulkan.example.MainKt"
 
 configurations {
     ktlint
@@ -60,13 +39,15 @@ kotlin {
         commonMain {
             dependencies {
                 implementation "org.jetbrains.kotlin:kotlin-stdlib-common:$kotlinVersion"
-                implementation "io.github.inoutch:kotlin-vulkan:$kotlinVulkanVersion"
+
+                implementation project(":kotlin-vulkan")
             }
         }
         jvmMain {
             dependencies {
                 implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlinVersion"
-                implementation "io.github.inoutch:kotlin-vulkan-jvm:$kotlinVulkanVersion"
+
+                implementation project(":kotlin-vulkan")
 
                 implementation "org.lwjgl:lwjgl:$lwjglVersion"
                 implementation "org.lwjgl:lwjgl-stb:$lwjglVersion"
@@ -84,7 +65,8 @@ kotlin {
         iosArm64Main {
             dependencies {
                 implementation "org.jetbrains.kotlin:kotlin-stdlib-common:$kotlinVersion"
-                implementation "io.github.inoutch:kotlin-vulkan-iosarm64:$kotlinVulkanVersion"
+
+                implementation project(":kotlin-vulkan")
             }
         }
     }
