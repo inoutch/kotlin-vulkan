@@ -7,7 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		953E19B0238A494200474807 /* MVKView.mm in Sources */ = {isa = PBXBuildFile; fileRef = 953E19AF238A494200474807 /* MVKView.mm */; };
+		95FBFE5D23F58E560015A93A /* MVKView.mm in Sources */ = {isa = PBXBuildFile; fileRef = 95FBFE5C23F58E560015A93A /* MVKView.mm */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -23,9 +23,9 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		953E19AE238A494200474807 /* MVKView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MVKView.h; sourceTree = "<group>"; };
-		953E19AF238A494200474807 /* MVKView.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = MVKView.mm; sourceTree = "<group>"; };
 		956BB06E22329940009897A4 /* libMVKView.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libMVKView.a; sourceTree = BUILT_PRODUCTS_DIR; };
+		95FBFE5B23F58E560015A93A /* MVKView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MVKView.h; sourceTree = "<group>"; };
+		95FBFE5C23F58E560015A93A /* MVKView.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = MVKView.mm; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -39,20 +39,10 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		953E19AD238A494200474807 /* MVKView */ = {
-			isa = PBXGroup;
-			children = (
-				953E19AE238A494200474807 /* MVKView.h */,
-				953E19AF238A494200474807 /* MVKView.mm */,
-			);
-			name = MVKView;
-			path = ../src/iosArm64Main/objc/MVKView;
-			sourceTree = "<group>";
-		};
 		956BB06522329940009897A4 = {
 			isa = PBXGroup;
 			children = (
-				953E19AD238A494200474807 /* MVKView */,
+				95FBFE5A23F58E560015A93A /* MVKView */,
 				956BB06F22329940009897A4 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -63,6 +53,16 @@
 				956BB06E22329940009897A4 /* libMVKView.a */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		95FBFE5A23F58E560015A93A /* MVKView */ = {
+			isa = PBXGroup;
+			children = (
+				95FBFE5B23F58E560015A93A /* MVKView.h */,
+				95FBFE5C23F58E560015A93A /* MVKView.mm */,
+			);
+			name = MVKView;
+			path = ../core/src/iosArm64Main/objc/MVKView;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -122,7 +122,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				953E19B0238A494200474807 /* MVKView.mm in Sources */,
+				95FBFE5D23F58E560015A93A /* MVKView.mm in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
