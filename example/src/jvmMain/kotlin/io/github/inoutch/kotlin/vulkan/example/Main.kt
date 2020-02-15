@@ -11,8 +11,6 @@ import org.lwjgl.glfw.GLFW.GLFW_TRUE
 import org.lwjgl.glfw.GLFW.GLFW_VISIBLE
 import org.lwjgl.glfw.GLFW.glfwCreateWindow
 import org.lwjgl.glfw.GLFW.glfwDefaultWindowHints
-import org.lwjgl.glfw.GLFW.glfwGetPrimaryMonitor
-import org.lwjgl.glfw.GLFW.glfwGetVideoMode
 import org.lwjgl.glfw.GLFW.glfwInit
 import org.lwjgl.glfw.GLFW.glfwPollEvents
 import org.lwjgl.glfw.GLFW.glfwSetFramebufferSizeCallback

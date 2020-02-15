@@ -366,6 +366,7 @@ fun createGraphicsPipeline(
                     VkColorComponentFlagBits.VK_COLOR_COMPONENT_B_BIT,
                     VkColorComponentFlagBits.VK_COLOR_COMPONENT_A_BIT))
     val colorBlendStateCreateInfo = VkPipelineColorBlendStateCreateInfo(
+            VkStructureType.VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO,
             0,
             false,
             VkLogicOp.VK_LOGIC_OP_CLEAR,
