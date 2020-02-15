@@ -488,7 +488,11 @@ class HelloTriangleApplication(private val delegate: Delegate) {
         val indices = findQueueFamilies(physicalDevice)
 
         val queueCreateInfos = mutableListOf<VkDeviceQueueCreateInfo>()
-        val uniqueQueueFamilies = listOf(indices.graphicsFamily, indices.presentFamily)
+        val uniqueQueueFamilies = if (indices.graphicsFamily == indices.presentFamily) {
+            listOf(indices.graphicsFamily)
+        } else {
+            listOf(indices.graphicsFamily, indices.presentFamily)
+        }
 
         val queuePriority = 1.0f
         for (queueFamily in uniqueQueueFamilies) {
@@ -535,7 +539,11 @@ class HelloTriangleApplication(private val delegate: Delegate) {
         device = getProperty { vk.createDevice(physicalDevice, createInfo, it) }
 
         graphicsQueue = getProperty { vk.getDeviceQueue(device, indices.graphicsFamily, 0, it) }
-        presentQueue = getProperty { vk.getDeviceQueue(device, indices.presentFamily, 0, it) }
+        presentQueue = if (indices.graphicsFamily == indices.presentFamily) {
+            graphicsQueue
+        } else {
+            getProperty { vk.getDeviceQueue(device, indices.presentFamily, 0, it) }
+        }
     }
 
     private fun createSwapChain() {
@@ -630,10 +638,10 @@ class HelloTriangleApplication(private val delegate: Delegate) {
         val subpass = VkSubpassDescription(
                 flags = listOf(),
                 pipelineBindPoint = VkPipelineBindPoint.VK_PIPELINE_BIND_POINT_GRAPHICS,
-                inputAttachments = listOf(colorAttachmentRef),
-                colorAttachments = listOf(depthAttachmentRef),
+                inputAttachments = listOf(),
+                colorAttachments = listOf(colorAttachmentRef),
                 resolveAttachments = listOf(),
-                depthStencilAttachment = null,
+                depthStencilAttachment = depthAttachmentRef,
                 preserveAttachments = listOf()
         )
 
@@ -672,7 +680,7 @@ class HelloTriangleApplication(private val delegate: Delegate) {
         )
 
         val samplerLayoutBinding = VkDescriptorSetLayoutBinding(
-                0,
+                1,
                 VkDescriptorType.VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
                 1,
                 listOf(VkShaderStageFlagBits.VK_SHADER_STAGE_FRAGMENT_BIT),
@@ -682,8 +690,8 @@ class HelloTriangleApplication(private val delegate: Delegate) {
         val bindings = listOf(uboLayoutBinding, samplerLayoutBinding)
         val layoutInfo = VkDescriptorSetLayoutCreateInfo(
                 VkStructureType.VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO,
-                listOf(),
-                bindings
+                flags = listOf(),
+                bindings = bindings
         )
 
         descriptorSetLayout = getProperty { vk.createDescriptorSetLayout(device, layoutInfo, it) }
@@ -967,7 +975,6 @@ class HelloTriangleApplication(private val delegate: Delegate) {
         // TODO: Set actual image bytes
         val texWidth = 1
         val texHeight = 1
-        val texChannel = 0
         val pixels = byteArrayOf(-1, -1, -1, -1)
         val imageSize = texWidth * texHeight * 4
 
@@ -1409,7 +1416,7 @@ class HelloTriangleApplication(private val delegate: Delegate) {
             val bufferInfo = VkDescriptorBufferInfo(
                     buffer = uniformBuffers[i],
                     offset = 0,
-                    range = UniformBufferObject.SIZE.toLong()
+                    range = UniformBufferObject.SIZE
             )
 
             val imageInfo = VkDescriptorImageInfo(
@@ -1518,7 +1525,7 @@ class HelloTriangleApplication(private val delegate: Delegate) {
         vk.queueSubmit(graphicsQueue, listOf(submitInfo), null)
         vk.queueWaitIdle(graphicsQueue)
 
-        vk.freeCommandBuffers(device, commandPool, commandBuffers)
+        vk.freeCommandBuffers(device, commandPool, listOf(commandBuffer))
     }
 
     private fun copyBuffer(srcBuffer: VkBuffer, dstBuffer: VkBuffer, size: VkDeviceSize) {
@@ -1644,7 +1651,7 @@ class HelloTriangleApplication(private val delegate: Delegate) {
         this.imageAvailableSemaphores = imageAvailableSemaphores
         this.renderFinishedSemaphores = renderFinishedSemaphores
         this.inFlightFences = inFlightFences
-        this.imagesInFlight = MutableList(inFlightFences.size) { null }
+        this.imagesInFlight = MutableList(swapChainImages.size) { null }
     }
 
     private fun updateUniformBuffer(currentImage: Int) {
@@ -1698,11 +1705,11 @@ class HelloTriangleApplication(private val delegate: Delegate) {
 
         updateUniformBuffer(imageIndex)
 
-        imagesInFlight.getOrNull(imageIndex)?.let {
+        imagesInFlight[imageIndex]?.let {
             vk.waitForFences(device, listOf(it), true, Long.MAX_VALUE)
         }
 
-        imagesInFlight[imageIndex] = inFlightFences[imageIndex]
+        imagesInFlight[imageIndex] = inFlightFences[currentFrame]
 
         val waitSemaphores = listOf(imageAvailableSemaphores[currentFrame])
         val waitStages = listOf(VkPipelineStageFlagBits.VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT)
@@ -1718,8 +1725,9 @@ class HelloTriangleApplication(private val delegate: Delegate) {
 
         vk.resetFences(device, listOf(inFlightFences[currentFrame]))
 
-        check(vk.queueSubmit(graphicsQueue, listOf(submitInfo), inFlightFences[currentFrame]) == VkResult.VK_SUCCESS) {
-            "Failed to submit draw command buffer"
+        result = vk.queueSubmit(graphicsQueue, listOf(submitInfo), inFlightFences[currentFrame])
+        check(result.isSucceeded()) {
+            "Error(${result}): Failed to submit draw command buffer"
         }
 
         val presentInfo = VkPresentInfoKHR(
