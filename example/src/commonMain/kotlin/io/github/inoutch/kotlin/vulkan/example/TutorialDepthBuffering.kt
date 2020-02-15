@@ -1330,7 +1330,7 @@ class HelloTriangleApplication(private val delegate: Delegate) {
         val data: MappedMemory = getProperty {
             vk.mapMemory(device, stagingBufferMemory, 0, bufferSize, listOf(), it)
         }
-        data.copy(0, bufferSize, indices.toIntArray())
+        data.copy(0, indices.size.toLong(), indices.toIntArray())
         data.destroy()
 
         val indexBufferRef = MutableProperty<VkBuffer>()
@@ -1623,7 +1623,7 @@ class HelloTriangleApplication(private val delegate: Delegate) {
                     listOf()
             )
 
-            vk.cmdDrawIndexed(commandBuffer, indices.size, 1, 0, 0, 0)
+//            vk.cmdDrawIndexed(commandBuffer, indices.size, 1, 0, 0, 0)
 
             vk.cmdEndRenderPass(commandBuffer)
 
@@ -1678,7 +1678,8 @@ class HelloTriangleApplication(private val delegate: Delegate) {
                     it
             )
         }
-        data.copy(0, UniformBufferObject.SIZE, ubo.flatten())
+        val floatArray = ubo.flatten()
+        data.copy(0, floatArray.size.toLong(), floatArray)
         data.destroy()
     }
 
