@@ -186,7 +186,7 @@ data class Vertex(
     val texCoord: Vec2
 ) {
     companion object {
-        const val SIZE = (3 + 3 + 2) + FLOAT_BYTE_SIZE
+        const val SIZE = (Vec3.SIZE + Vec3.SIZE + Vec2.SIZE) * FLOAT_BYTE_SIZE
 
         fun getBindingDescription(): VkVertexInputBindingDescription {
             return VkVertexInputBindingDescription(
@@ -248,7 +248,7 @@ val vertices = listOf(
         listOf(listOf(0.5f, -0.5f, -0.5f), listOf(0.0f, 1.0f, 0.0f), listOf(0.0f, 0.0f)),
         listOf(listOf(0.5f, 0.5f, -0.5f), listOf(0.0f, 0.0f, 1.0f), listOf(0.0f, 1.0f)),
         listOf(listOf(-0.5f, 0.5f, -0.5f), listOf(1.0f, 1.0f, 1.0f), listOf(1.0f, 1.0f))
-)
+).flatten().flatten().toFloatArray()
 
 val indices = listOf(
         0, 1, 2, 2, 3, 0,
@@ -1283,7 +1283,7 @@ class HelloTriangleApplication(private val delegate: Delegate) {
         val data: MappedMemory = getProperty {
             vk.mapMemory(device, stagingBufferMemory, 0, bufferSize, listOf(), it)
         }
-        data.copy(0, vertices.size.toLong(), vertices.flatten().flatten().toFloatArray())
+        data.copy(0, vertices.size.toLong(), vertices)
         data.destroy()
 
         val vertexBufferRef = MutableProperty<VkBuffer>()
@@ -1727,7 +1727,7 @@ class HelloTriangleApplication(private val delegate: Delegate) {
 
         result = vk.queueSubmit(graphicsQueue, listOf(submitInfo), inFlightFences[currentFrame])
         check(result.isSucceeded()) {
-            "Error(${result}): Failed to submit draw command buffer"
+            "Error($result): Failed to submit draw command buffer"
         }
 
         val presentInfo = VkPresentInfoKHR(
