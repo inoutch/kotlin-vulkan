@@ -19,7 +19,7 @@ fun VkGraphicsPipelineCreateInfo.copyToNative(
             .pMultisampleState(multisampleState.toNative(memScope))
             .pDepthStencilState(depthStencilState.toNative(memScope))
             .pColorBlendState(colorBlendState.toNative(memScope))
-            .pDynamicState(dynamicState.toNative(memScope))
+            .pDynamicState(dynamicState?.toNative(memScope))
             .layout(layout.native)
             .renderPass(renderPass.native)
             .subpass(subpass) // index

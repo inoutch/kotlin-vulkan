@@ -49,6 +49,8 @@ expect object vk {
 
     fun cmdBindVertexBuffers(commandBuffer: VkCommandBuffer, firstBinding: Int, buffers: List<VkBuffer>, offsets: List<Long>)
 
+    fun cmdBindIndexBuffer(commandBuffer: VkCommandBuffer, buffer: VkBuffer, offset: VkDeviceSize, indexType: VkIndexType)
+
     fun cmdCopyBuffer(
         commandBuffer: VkCommandBuffer,
         srcBuffer: VkBuffer,
@@ -57,6 +59,15 @@ expect object vk {
     )
 
     fun cmdDraw(commandBuffer: VkCommandBuffer, vertexCount: Int, instanceCount: Int, firstVertex: Int, firstInstance: Int)
+
+    fun cmdDrawIndexed(
+            commandBuffer: VkCommandBuffer,
+            indexCount: Int,
+            instanceCount: Int,
+            firstIndex: Int,
+            vertexOffset: Int,
+            firstInstance: Int
+    )
 
     fun cmdPipelineBarrier(
         commandBuffer: VkCommandBuffer,
@@ -182,9 +193,19 @@ expect object vk {
 
     fun enumeratePhysicalDevices(instance: VkInstance, physicalDevices: MutableList<VkPhysicalDevice>): VkResult
 
+    fun enumerateDeviceExtensionProperties(
+            physicalDevice: VkPhysicalDevice,
+            name: String?,
+            properties: MutableList<VkExtensionProperties>
+    ): VkResult
+
+    fun enumerateInstanceLayerProperties(properties: MutableList<VkLayerProperties>): VkResult
+
     fun getPhysicalDeviceMemoryProperties(physicalDevice: VkPhysicalDevice, memoryProperties: MutableProperty<VkPhysicalDeviceMemoryProperties>)
 
     fun getPhysicalDeviceProperties(physicalDevice: VkPhysicalDevice, properties: MutableProperty<VkPhysicalDeviceProperties>)
+
+    fun getPhysicalDeviceFeatures(physicalDevice: VkPhysicalDevice, features: MutableProperty<VkPhysicalDeviceFeatures>)
 
     fun createGraphicsPipelines(
         device: VkDevice,

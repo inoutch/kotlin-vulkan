@@ -25,7 +25,7 @@ fun VkGraphicsPipelineCreateInfo.copyToNative(
     native.pMultisampleState = multisampleState.toNative(scope)
     native.pDepthStencilState = depthStencilState.toNative(scope)
     native.pColorBlendState = colorBlendState.toNative(scope)
-    native.pDynamicState = dynamicState.toNative(scope)
+    native.pDynamicState = dynamicState?.toNative(scope)
     native.layout = layout.native
     native.renderPass = renderPass.native
     native.subpass = subpass.toUInt()

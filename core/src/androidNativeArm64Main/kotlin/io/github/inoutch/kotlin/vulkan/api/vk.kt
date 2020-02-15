@@ -12,6 +12,7 @@ import kotlinx.cinterop.get
 import kotlinx.cinterop.memScoped
 import kotlinx.cinterop.ptr
 import kotlinx.cinterop.set
+import kotlinx.cinterop.toKStringFromUtf8
 import kotlinx.cinterop.value
 import vulkan_android.VK_TRUE
 import vulkan_android.VkCommandBufferVar
@@ -28,6 +29,7 @@ import vulkan_android.vkBindBufferMemory
 import vulkan_android.vkBindImageMemory
 import vulkan_android.vkCmdBeginRenderPass
 import vulkan_android.vkCmdBindDescriptorSets
+import vulkan_android.vkCmdBindIndexBuffer
 import vulkan_android.vkCmdBindPipeline
 import vulkan_android.vkCmdBindVertexBuffers
 import vulkan_android.vkCmdClearColorImage
@@ -35,6 +37,7 @@ import vulkan_android.vkCmdClearDepthStencilImage
 import vulkan_android.vkCmdCopyBuffer
 import vulkan_android.vkCmdCopyImageToBuffer
 import vulkan_android.vkCmdDraw
+import vulkan_android.vkCmdDrawIndexed
 import vulkan_android.vkCmdEndRenderPass
 import vulkan_android.vkCmdPipelineBarrier
 import vulkan_android.vkCmdSetScissor
@@ -80,6 +83,8 @@ import vulkan_android.vkDestroySurfaceKHR
 import vulkan_android.vkDestroySwapchainKHR
 import vulkan_android.vkDeviceWaitIdle
 import vulkan_android.vkEndCommandBuffer
+import vulkan_android.vkEnumerateDeviceExtensionProperties
+import vulkan_android.vkEnumerateInstanceLayerProperties
 import vulkan_android.vkEnumeratePhysicalDevices
 import vulkan_android.vkFreeCommandBuffers
 import vulkan_android.vkFreeDescriptorSets
@@ -88,6 +93,7 @@ import vulkan_android.vkGetBufferMemoryRequirements
 import vulkan_android.vkGetDeviceQueue
 import vulkan_android.vkGetImageMemoryRequirements
 import vulkan_android.vkGetImageSubresourceLayout
+import vulkan_android.vkGetPhysicalDeviceFeatures
 import vulkan_android.vkGetPhysicalDeviceFormatProperties
 import vulkan_android.vkGetPhysicalDeviceMemoryProperties
 import vulkan_android.vkGetPhysicalDeviceProperties
@@ -240,6 +246,15 @@ actual object vk {
                 offsets.map { it.toULong() }.toNative(this))
     }
 
+    actual fun cmdBindIndexBuffer(commandBuffer: VkCommandBuffer, buffer: VkBuffer, offset: VkDeviceSize, indexType: VkIndexType) {
+        vkCmdBindIndexBuffer(
+                commandBuffer.native,
+                buffer.native,
+                offset.toULong(),
+                indexType.type.toUInt()
+        )
+    }
+
     actual fun cmdCopyBuffer(
         commandBuffer: VkCommandBuffer,
         srcBuffer: VkBuffer,
@@ -262,6 +277,24 @@ actual object vk {
                 instanceCount.toUInt(),
                 firstVertex.toUInt(),
                 firstInstance.toUInt())
+    }
+
+    actual fun cmdDrawIndexed(
+            commandBuffer: VkCommandBuffer,
+            indexCount: Int,
+            instanceCount: Int,
+            firstIndex: Int,
+            vertexOffset: Int,
+            firstInstance: Int
+    ) {
+        vkCmdDrawIndexed(
+                commandBuffer.native,
+                indexCount.toUInt(),
+                instanceCount.toUInt(),
+                firstIndex.toUInt(),
+                vertexOffset,
+                firstInstance.toUInt()
+        )
     }
 
     actual fun cmdPipelineBarrier(
@@ -689,6 +722,45 @@ actual object vk {
         return@memScoped result
     }
 
+    actual fun enumerateDeviceExtensionProperties(
+            physicalDevice: VkPhysicalDevice,
+            name: String?,
+            properties: MutableList<VkExtensionProperties>
+    ): VkResult = memScoped {
+        val count = alloc<UIntVar>()
+        var result = vkEnumerateDeviceExtensionProperties(physicalDevice.native, name, count.ptr, null)
+                .toVkResult()
+        if (!result.isSucceeded()) {
+            return@memScoped result
+        }
+
+        val natives = allocArray<vulkan_android.VkExtensionProperties>(count.value.toInt())
+        result = vkEnumerateDeviceExtensionProperties(physicalDevice.native, name, count.ptr, natives).toVkResult()
+        count.value.toInt().forEachIndexes {
+            val native = natives[it]
+            properties.add(VkExtensionProperties(
+                    native.extensionName.toKStringFromUtf8(),
+                    native.specVersion.toInt()
+            ))
+        }
+        result
+    }
+
+    actual fun enumerateInstanceLayerProperties(properties: MutableList<VkLayerProperties>): VkResult = memScoped {
+        val count = alloc<UIntVar>()
+        var result = vkEnumerateInstanceLayerProperties(count.ptr, null).toVkResult()
+        if (!result.isSucceeded()) {
+            return@memScoped result
+        }
+
+        val natives = allocArray<vulkan_android.VkLayerProperties>(count.value.toInt())
+        result = vkEnumerateInstanceLayerProperties(count.ptr, natives).toVkResult()
+        count.value.toInt().forEachIndexes {
+            properties.add(natives[it].toOrigin())
+        }
+        result
+    }
+
     actual fun getPhysicalDeviceMemoryProperties(
         physicalDevice: VkPhysicalDevice,
         memoryProperties: MutableProperty<VkPhysicalDeviceMemoryProperties>
@@ -705,6 +777,15 @@ actual object vk {
         val native = alloc<vulkan_android.VkPhysicalDeviceProperties>()
         vkGetPhysicalDeviceProperties(physicalDevice.native, native.ptr)
         properties set native.toOrigin()
+    }
+
+    actual fun getPhysicalDeviceFeatures(
+            physicalDevice: VkPhysicalDevice,
+            features: MutableProperty<VkPhysicalDeviceFeatures>
+    ) = memScoped {
+        val native = alloc<vulkan_android.VkPhysicalDeviceFeatures>()
+        vkGetPhysicalDeviceFeatures(physicalDevice.native, native.ptr)
+        features set native.toOrigin()
     }
 
     actual fun createGraphicsPipelines(

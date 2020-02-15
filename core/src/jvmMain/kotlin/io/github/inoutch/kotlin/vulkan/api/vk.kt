@@ -1,6 +1,7 @@
 package io.github.inoutch.kotlin.vulkan.api
 
 import io.github.inoutch.kotlin.vulkan.extension.forEachIndexes
+import io.github.inoutch.kotlin.vulkan.extension.toByteArray
 import io.github.inoutch.kotlin.vulkan.extension.toNative
 import io.github.inoutch.kotlin.vulkan.utility.MappedMemory
 import io.github.inoutch.kotlin.vulkan.utility.MutableProperty
@@ -108,6 +109,15 @@ actual object vk {
                 offsets.toLongArray())
     }
 
+    actual fun cmdBindIndexBuffer(commandBuffer: VkCommandBuffer, buffer: VkBuffer, offset: VkDeviceSize, indexType: VkIndexType) {
+        VK10.vkCmdBindIndexBuffer(
+                commandBuffer.native,
+                buffer.native,
+                offset,
+                indexType.type
+        )
+    }
+
     actual fun cmdCopyBuffer(
         commandBuffer: VkCommandBuffer,
         srcBuffer: VkBuffer,
@@ -119,6 +129,24 @@ actual object vk {
 
     actual fun cmdDraw(commandBuffer: VkCommandBuffer, vertexCount: Int, instanceCount: Int, firstVertex: Int, firstInstance: Int) {
         VK10.vkCmdDraw(commandBuffer.native, vertexCount, instanceCount, firstVertex, firstInstance)
+    }
+
+    actual fun cmdDrawIndexed(
+            commandBuffer: VkCommandBuffer,
+            indexCount: Int,
+            instanceCount: Int,
+            firstIndex: Int,
+            vertexOffset: Int,
+            firstInstance: Int
+    ) {
+        VK10.vkCmdDrawIndexed(
+                commandBuffer.native,
+                indexCount,
+                instanceCount,
+                firstIndex,
+                vertexOffset,
+                firstInstance
+        )
     }
 
     actual fun cmdPipelineBarrier(
@@ -485,6 +513,47 @@ actual object vk {
         result
     }
 
+    actual fun enumerateDeviceExtensionProperties(
+            physicalDevice: VkPhysicalDevice,
+            name: String?,
+            properties: MutableList<VkExtensionProperties>
+    ): VkResult = memScoped {
+        val countPointer = allocInt()
+        var result = VK10.vkEnumerateDeviceExtensionProperties(physicalDevice.native, name, countPointer, null)
+                .toVkResult()
+        if (!result.isSucceeded()) {
+            return@memScoped result
+        }
+
+        val count = countPointer.get(0)
+        val natives = org.lwjgl.vulkan.VkExtensionProperties.calloc(count)
+        result = VK10.vkEnumerateDeviceExtensionProperties(physicalDevice.native, name, countPointer, natives).toVkResult()
+        count.forEachIndexes {
+            val native = natives[it]
+            properties.add(VkExtensionProperties(
+                    String(native.extensionName().toByteArray()),
+                    native.specVersion()
+            ))
+        }
+        result
+    }
+
+    actual fun enumerateInstanceLayerProperties(properties: MutableList<VkLayerProperties>): VkResult = memScoped {
+        val countPointer = allocInt()
+        var result = VK10.vkEnumerateInstanceLayerProperties(countPointer, null).toVkResult()
+        if (!result.isSucceeded()) {
+            return@memScoped result
+        }
+
+        val count = countPointer.get(0)
+        val natives = org.lwjgl.vulkan.VkLayerProperties.calloc(count)
+        result = VK10.vkEnumerateInstanceLayerProperties(countPointer, natives).toVkResult()
+        count.forEachIndexes {
+            properties.add(natives[it].toOrigin())
+        }
+        result
+    }
+
     actual fun getPhysicalDeviceMemoryProperties(
         physicalDevice: VkPhysicalDevice,
         memoryProperties: MutableProperty<VkPhysicalDeviceMemoryProperties>
@@ -501,6 +570,15 @@ actual object vk {
         val native = add(org.lwjgl.vulkan.VkPhysicalDeviceProperties.calloc())
         VK10.vkGetPhysicalDeviceProperties(physicalDevice.native, native)
         properties set native.toOrigin()
+    }
+
+    actual fun getPhysicalDeviceFeatures(
+            physicalDevice: VkPhysicalDevice,
+            features: MutableProperty<VkPhysicalDeviceFeatures>
+    ) = memScoped {
+        val native = add(org.lwjgl.vulkan.VkPhysicalDeviceFeatures.calloc())
+        VK10.vkGetPhysicalDeviceFeatures(physicalDevice.native, native)
+        features set native.toOrigin()
     }
 
     actual fun createGraphicsPipelines(device: VkDevice, pipelineCache: VkPipelineCache?, createInfos: List<VkGraphicsPipelineCreateInfo>, pipeline: MutableProperty<VkPipeline>): VkResult = memScoped {

@@ -62,6 +62,10 @@ actual object vk {
         throw UnsupportedVulkanError()
     }
 
+    actual fun cmdBindIndexBuffer(commandBuffer: VkCommandBuffer, buffer: VkBuffer, offset: VkDeviceSize, indexType: VkIndexType) {
+        throw UnsupportedVulkanError()
+    }
+
     actual fun cmdCopyBuffer(
         commandBuffer: VkCommandBuffer,
         srcBuffer: VkBuffer,
@@ -72,6 +76,17 @@ actual object vk {
     }
 
     actual fun cmdDraw(commandBuffer: VkCommandBuffer, vertexCount: Int, instanceCount: Int, firstVertex: Int, firstInstance: Int) {
+        throw UnsupportedVulkanError()
+    }
+
+    actual fun cmdDrawIndexed(
+            commandBuffer: VkCommandBuffer,
+            indexCount: Int,
+            instanceCount: Int,
+            firstIndex: Int,
+            vertexOffset: Int,
+            firstInstance: Int
+    ) {
         throw UnsupportedVulkanError()
     }
 
@@ -235,11 +250,30 @@ actual object vk {
         throw UnsupportedVulkanError()
     }
 
+    actual fun enumerateDeviceExtensionProperties(
+            physicalDevice: VkPhysicalDevice,
+            name: String?,
+            properties: MutableList<VkExtensionProperties>
+    ): VkResult {
+        throw UnsupportedVulkanError()
+    }
+
+    actual fun enumerateInstanceLayerProperties(properties: MutableList<VkLayerProperties>): VkResult {
+        throw UnsupportedVulkanError()
+    }
+
     actual fun getPhysicalDeviceMemoryProperties(physicalDevice: VkPhysicalDevice, memoryProperties: MutableProperty<VkPhysicalDeviceMemoryProperties>) {
         throw UnsupportedVulkanError()
     }
 
     actual fun getPhysicalDeviceProperties(physicalDevice: VkPhysicalDevice, properties: MutableProperty<VkPhysicalDeviceProperties>) {
+        throw UnsupportedVulkanError()
+    }
+
+    actual fun getPhysicalDeviceFeatures(
+            physicalDevice: VkPhysicalDevice,
+            features: MutableProperty<VkPhysicalDeviceFeatures>
+    ) {
         throw UnsupportedVulkanError()
     }
 
