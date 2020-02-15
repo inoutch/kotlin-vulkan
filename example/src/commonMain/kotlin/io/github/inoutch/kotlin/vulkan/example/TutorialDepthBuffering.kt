@@ -146,6 +146,8 @@ import io.github.inoutch.kotlin.vulkan.api.vk
 import io.github.inoutch.kotlin.vulkan.example.math.Mat4
 import io.github.inoutch.kotlin.vulkan.example.math.Vec2
 import io.github.inoutch.kotlin.vulkan.example.math.Vec3
+import io.github.inoutch.kotlin.vulkan.example.shader.tutorialDepthBufferingFrag
+import io.github.inoutch.kotlin.vulkan.example.shader.tutorialDepthBufferingVert
 import io.github.inoutch.kotlin.vulkan.utility.MappedMemory
 import io.github.inoutch.kotlin.vulkan.utility.MutableProperty
 import io.github.inoutch.kotlin.vulkan.utility.Version
@@ -185,6 +187,7 @@ data class Vertex(
 ) {
     companion object {
         const val SIZE = (3 + 3 + 2) + FLOAT_BYTE_SIZE
+
         fun getBindingDescription(): VkVertexInputBindingDescription {
             return VkVertexInputBindingDescription(
                     0,
@@ -215,16 +218,12 @@ data class Vertex(
             return listOf(value1, value2, value3)
         }
     }
-
-    fun flatten(): FloatArray {
-        return floatArrayOf()
-    }
 }
 
 class UniformBufferObject(
-    val model: Mat4,
-    val view: Mat4,
-    val proj: Mat4
+    private val model: Mat4,
+    private val view: Mat4,
+    private val proj: Mat4
 ) {
     companion object {
         const val SIZE = (Mat4.SIZE * 3).toLong()
@@ -322,9 +321,6 @@ class HelloTriangleApplication(private val delegate: Delegate) {
 
     private var framebufferResized = false
 
-    fun initWindow() {
-    }
-
     fun resize() {
         framebufferResized = true
     }
@@ -352,9 +348,6 @@ class HelloTriangleApplication(private val delegate: Delegate) {
         createDescriptorSets()
         createCommandBuffers()
         createSyncObjects()
-    }
-
-    fun mainLoop() {
     }
 
     private fun cleanupSwapChain() {
@@ -426,25 +419,40 @@ class HelloTriangleApplication(private val delegate: Delegate) {
         delegate.destroy()
     }
 
-    fun recreateSwapChain() {
-        val width = 0
-        val height = 0
+    private fun recreateSwapChain() {
+        val widthRef = MutableProperty<Int>()
+        val heightRef = MutableProperty<Int>()
+
+        delegate.getFramebufferSize(widthRef, heightRef)
 
         vk.deviceWaitIdle(device)
+
+        cleanupSwapChain()
+
+        createSwapChain()
+        createImageViews()
+        createRenderPass()
+        createGraphicsPipeline()
+        createDepthResources()
+        createFramebuffers()
+        createUniformBuffers()
+        createDescriptorPool()
+        createDescriptorSets()
+        createCommandBuffers()
     }
 
-    fun createInstance() {
+    private fun createInstance() {
         check(!enableValidationLayers || checkValidationLayerSupport()) {
             "Validation layers requested, but not available"
         }
 
         val appInfo = VkApplicationInfo(
                 VkStructureType.VK_STRUCTURE_TYPE_APPLICATION_INFO,
-                "Hello Triangle",
-                Version(1, 0, 0),
-                "No Engine",
-                Version(1, 0, 0),
-                Version(1, 0, 0)
+                applicationName = "Hello Triangle",
+                applicationVersion = Version(1, 0, 0),
+                engineName = "No Engine",
+                engineVersion = Version(1, 0, 0),
+                apiVersion = Version(1, 0, 3)
         )
 
         val extensions = getRequiredExtensions()
@@ -459,11 +467,11 @@ class HelloTriangleApplication(private val delegate: Delegate) {
         instance = getProperty { vk.createInstance(createInfo, it) }
     }
 
-    fun createSurface() {
+    private fun createSurface() {
         surface = getProperty { delegate.createSurface(instance, it) }
     }
 
-    fun pickPhysicalDevice() {
+    private fun pickPhysicalDevice() {
         val devices = getProperties<VkPhysicalDevice> { vk.enumeratePhysicalDevices(instance, it) }
         for (device in devices) {
             if (isDeviceSuitable(device)) {
@@ -476,11 +484,11 @@ class HelloTriangleApplication(private val delegate: Delegate) {
         }
     }
 
-    fun createLogicalDevice() {
+    private fun createLogicalDevice() {
         val indices = findQueueFamilies(physicalDevice)
 
         val queueCreateInfos = mutableListOf<VkDeviceQueueCreateInfo>()
-        val uniqueQueueFamilies = listOf<Int>()
+        val uniqueQueueFamilies = listOf(indices.graphicsFamily, indices.presentFamily)
 
         val queuePriority = 1.0f
         for (queueFamily in uniqueQueueFamilies) {
@@ -518,11 +526,11 @@ class HelloTriangleApplication(private val delegate: Delegate) {
 
         val createInfo = VkDeviceCreateInfo(
                 VkStructureType.VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO,
-                listOf(),
-                queueCreateInfos,
-                listOf(),
-                delegate.getSwapchainExtensionNames(),
-                deviceFeatures
+                flags = listOf(),
+                queueCreateInfos = queueCreateInfos,
+                enabledLayerNames = listOf(),
+                enabledExtensionNames = delegate.getSwapchainExtensionNames(),
+                enabledFeatures = deviceFeatures
         )
         device = getProperty { vk.createDevice(physicalDevice, createInfo, it) }
 
@@ -530,7 +538,7 @@ class HelloTriangleApplication(private val delegate: Delegate) {
         presentQueue = getProperty { vk.getDeviceQueue(device, indices.presentFamily, 0, it) }
     }
 
-    fun createSwapChain() {
+    private fun createSwapChain() {
         val swapChainSupport = querySwapChainSupport(physicalDevice)
 
         val surfaceFormat = chooseSwapSurfaceFormat(swapChainSupport.formats)
@@ -578,68 +586,68 @@ class HelloTriangleApplication(private val delegate: Delegate) {
         swapChainExtent = extent
     }
 
-    fun createImageViews() {
+    private fun createImageViews() {
         swapChainImageViews = swapChainImages.map {
             createImageView(it, swapChainImageFormat, listOf(VkImageAspectFlagBits.VK_IMAGE_ASPECT_COLOR_BIT))
         }
     }
 
-    fun createRenderPass() {
+    private fun createRenderPass() {
         val colorAttachment = VkAttachmentDescription(
-                listOf(),
-                swapChainImageFormat,
-                listOf(VkSampleCountFlagBits.VK_SAMPLE_COUNT_1_BIT),
-                VkAttachmentLoadOp.VK_ATTACHMENT_LOAD_OP_CLEAR,
-                VkAttachmentStoreOp.VK_ATTACHMENT_STORE_OP_STORE,
-                VkAttachmentLoadOp.VK_ATTACHMENT_LOAD_OP_DONT_CARE,
-                VkAttachmentStoreOp.VK_ATTACHMENT_STORE_OP_DONT_CARE,
-                VkImageLayout.VK_IMAGE_LAYOUT_UNDEFINED,
-                VkImageLayout.VK_IMAGE_LAYOUT_PRESENT_SRC_KHR
+                flags = listOf(),
+                format = swapChainImageFormat,
+                samples = listOf(VkSampleCountFlagBits.VK_SAMPLE_COUNT_1_BIT),
+                loadOp = VkAttachmentLoadOp.VK_ATTACHMENT_LOAD_OP_CLEAR,
+                storeOp = VkAttachmentStoreOp.VK_ATTACHMENT_STORE_OP_STORE,
+                stencilLoadOp = VkAttachmentLoadOp.VK_ATTACHMENT_LOAD_OP_DONT_CARE,
+                stencilStoreOp = VkAttachmentStoreOp.VK_ATTACHMENT_STORE_OP_DONT_CARE,
+                initialLayout = VkImageLayout.VK_IMAGE_LAYOUT_UNDEFINED,
+                finalLayout = VkImageLayout.VK_IMAGE_LAYOUT_PRESENT_SRC_KHR
         )
 
         val depthAttachment = VkAttachmentDescription(
-                listOf(),
-                findDepthFormat(),
-                listOf(VkSampleCountFlagBits.VK_SAMPLE_COUNT_1_BIT),
-                VkAttachmentLoadOp.VK_ATTACHMENT_LOAD_OP_CLEAR,
-                VkAttachmentStoreOp.VK_ATTACHMENT_STORE_OP_DONT_CARE,
-                VkAttachmentLoadOp.VK_ATTACHMENT_LOAD_OP_DONT_CARE,
-                VkAttachmentStoreOp.VK_ATTACHMENT_STORE_OP_DONT_CARE,
-                VkImageLayout.VK_IMAGE_LAYOUT_UNDEFINED,
-                VkImageLayout.VK_IMAGE_LAYOUT_UNDEFINED
+                flags = listOf(),
+                format = findDepthFormat(),
+                samples = listOf(VkSampleCountFlagBits.VK_SAMPLE_COUNT_1_BIT),
+                loadOp = VkAttachmentLoadOp.VK_ATTACHMENT_LOAD_OP_CLEAR,
+                storeOp = VkAttachmentStoreOp.VK_ATTACHMENT_STORE_OP_DONT_CARE,
+                stencilLoadOp = VkAttachmentLoadOp.VK_ATTACHMENT_LOAD_OP_DONT_CARE,
+                stencilStoreOp = VkAttachmentStoreOp.VK_ATTACHMENT_STORE_OP_DONT_CARE,
+                initialLayout = VkImageLayout.VK_IMAGE_LAYOUT_UNDEFINED,
+                finalLayout = VkImageLayout.VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL
         )
 
         val colorAttachmentRef = VkAttachmentReference(
-                0,
-                VkImageLayout.VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL
+                attachment = 0,
+                layout = VkImageLayout.VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL
         )
 
         val depthAttachmentRef = VkAttachmentReference(
-                1,
-                VkImageLayout.VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL
+                attachment = 1,
+                layout = VkImageLayout.VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL
         )
 
         val subpass = VkSubpassDescription(
-                listOf(),
-                VkPipelineBindPoint.VK_PIPELINE_BIND_POINT_GRAPHICS,
-                listOf(colorAttachmentRef),
-                listOf(depthAttachmentRef),
-                listOf(),
-                null,
-                listOf()
+                flags = listOf(),
+                pipelineBindPoint = VkPipelineBindPoint.VK_PIPELINE_BIND_POINT_GRAPHICS,
+                inputAttachments = listOf(colorAttachmentRef),
+                colorAttachments = listOf(depthAttachmentRef),
+                resolveAttachments = listOf(),
+                depthStencilAttachment = null,
+                preserveAttachments = listOf()
         )
 
         val dependency = VkSubpassDependency(
-                VK_SUBPASS_EXTERNAL,
-                0,
-                listOf(VkPipelineStageFlagBits.VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT),
-                listOf(VkPipelineStageFlagBits.VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT),
-                listOf(),
-                listOf(
+                srcSubpassIndex = VK_SUBPASS_EXTERNAL,
+                dstSubpassIndex = 0,
+                srcStageMask = listOf(VkPipelineStageFlagBits.VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT),
+                dstStageMask = listOf(VkPipelineStageFlagBits.VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT),
+                srcAccessMask = listOf(),
+                dstAccessMask = listOf(
                         VkAccessFlagBits.VK_ACCESS_COLOR_ATTACHMENT_READ_BIT,
                         VkAccessFlagBits.VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT
                 ),
-                listOf()
+                dependencyFlags = listOf()
         )
 
         val attachments = listOf(colorAttachment, depthAttachment)
@@ -654,7 +662,7 @@ class HelloTriangleApplication(private val delegate: Delegate) {
         renderPass = getProperty { vk.createRenderPass(device, renderPassInfo, it) }
     }
 
-    fun createDescriptorSetLayout() {
+    private fun createDescriptorSetLayout() {
         val uboLayoutBinding = VkDescriptorSetLayoutBinding(
                 0,
                 VkDescriptorType.VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
@@ -681,29 +689,29 @@ class HelloTriangleApplication(private val delegate: Delegate) {
         descriptorSetLayout = getProperty { vk.createDescriptorSetLayout(device, layoutInfo, it) }
     }
 
-    fun createGraphicsPipeline() {
-        val vertShaderCode = byteArrayOf()
-        val fragShaderCode = byteArrayOf()
+    private fun createGraphicsPipeline() {
+        val vertShaderCode = tutorialDepthBufferingVert
+        val fragShaderCode = tutorialDepthBufferingFrag
 
         val vertShaderModule = createShaderModule(vertShaderCode)
         val fragShaderModule = createShaderModule(fragShaderCode)
 
         val vertShaderStageInfo = VkPipelineShaderStageCreateInfo(
                 VkStructureType.VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO,
-                listOf(),
-                listOf(VkShaderStageFlagBits.VK_SHADER_STAGE_VERTEX_BIT),
-                vertShaderModule,
-                "main",
-                null
+                flags = listOf(),
+                stage = listOf(VkShaderStageFlagBits.VK_SHADER_STAGE_VERTEX_BIT),
+                module = vertShaderModule,
+                name = "main",
+                specializationInfo = null
         )
 
         val fragShaderStageInfo = VkPipelineShaderStageCreateInfo(
                 VkStructureType.VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO,
-                listOf(),
-                listOf(VkShaderStageFlagBits.VK_SHADER_STAGE_FRAGMENT_BIT),
-                fragShaderModule,
-                "main",
-                null
+                flags = listOf(),
+                stage = listOf(VkShaderStageFlagBits.VK_SHADER_STAGE_FRAGMENT_BIT),
+                module = fragShaderModule,
+                name = "main",
+                specializationInfo = null
         )
 
         val shaderStages = listOf(vertShaderStageInfo, fragShaderStageInfo)
@@ -712,25 +720,25 @@ class HelloTriangleApplication(private val delegate: Delegate) {
         val attributeDescriptions = Vertex.getAttributeDescriptions()
         val vertexInputInfo = VkPipelineVertexInputStateCreateInfo(
                 VkStructureType.VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO,
-                0,
-                listOf(bindingDescription),
-                attributeDescriptions
+                flags = 0,
+                vertexBindingDescriptions = listOf(bindingDescription),
+                vertexAttributeDescriptions = attributeDescriptions
         )
 
         val inputAssembly = VkPipelineInputAssemblyStateCreateInfo(
                 VkStructureType.VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO,
-                0,
-                VkPrimitiveTopology.VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST,
-                false
+                flags = 0,
+                topology = VkPrimitiveTopology.VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST,
+                primitiveRestartEnable = false
         )
 
         val viewport = VkViewport(
-                0.0f,
-                0.0f,
-                swapChainExtent.width.toFloat(),
-                swapChainExtent.height.toFloat(),
-                0.0f,
-                1.0f
+                x = 0.0f,
+                y = 0.0f,
+                width = swapChainExtent.width.toFloat(),
+                height = swapChainExtent.height.toFloat(),
+                minDepth = 0.0f,
+                maxDepth = 1.0f
         )
         val scissor = VkRect2D(
                 VkOffset2D(0, 0),
@@ -746,10 +754,10 @@ class HelloTriangleApplication(private val delegate: Delegate) {
 
         val rasterizer = VkPipelineRasterizationStateCreateInfo(
                 VkStructureType.VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO,
-                0,
-                VkPolygonMode.VK_POLYGON_MODE_FILL,
-                VkCullModeFlagBits.VK_CULL_MODE_BACK_BIT,
-                VkFrontFace.VK_FRONT_FACE_COUNTER_CLOCKWISE,
+                flags = 0,
+                polygonMode = VkPolygonMode.VK_POLYGON_MODE_FILL,
+                cullMode = VkCullModeFlagBits.VK_CULL_MODE_BACK_BIT,
+                frontFace = VkFrontFace.VK_FRONT_FACE_COUNTER_CLOCKWISE,
                 depthClampEnable = false,
                 rasterizerDiscardEnable = false,
                 depthBiasEnable = false,
@@ -860,7 +868,7 @@ class HelloTriangleApplication(private val delegate: Delegate) {
         vk.destroyShaderModule(device, fragShaderModule)
     }
 
-    fun createFramebuffers() {
+    private fun createFramebuffers() {
         swapChainFramebuffers = swapChainImageViews.map {
             val attachments = listOf(it, depthImageView)
 
@@ -877,7 +885,7 @@ class HelloTriangleApplication(private val delegate: Delegate) {
         }
     }
 
-    fun createCommandPool() {
+    private fun createCommandPool() {
         val queueFamilyIndices = findQueueFamilies(physicalDevice)
         val poolInfo = VkCommandPoolCreateInfo(
                 VkStructureType.VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO,
@@ -888,7 +896,7 @@ class HelloTriangleApplication(private val delegate: Delegate) {
         commandPool = getProperty { vk.createCommandPool(device, poolInfo, it) }
     }
 
-    fun createDepthResources() {
+    private fun createDepthResources() {
         val depthFormat = findDepthFormat()
         val depthImageRef = MutableProperty<VkImage>()
         val depthImageMemoryRef = MutableProperty<VkDeviceMemory>()
@@ -914,7 +922,7 @@ class HelloTriangleApplication(private val delegate: Delegate) {
         )
     }
 
-    fun findSupportedFormat(
+    private fun findSupportedFormat(
         candidates: List<VkFormat>,
         tiling: VkImageTiling,
         features: List<VkFormatFeatureFlagBits>
@@ -936,7 +944,7 @@ class HelloTriangleApplication(private val delegate: Delegate) {
         })
     }
 
-    fun findDepthFormat(): VkFormat {
+    private fun findDepthFormat(): VkFormat {
         return findSupportedFormat(
                 listOf(
                         VkFormat.VK_FORMAT_D32_SFLOAT,
@@ -948,14 +956,14 @@ class HelloTriangleApplication(private val delegate: Delegate) {
         )
     }
 
-    fun hasStencilComponent(format: VkFormat): Boolean {
+    private fun hasStencilComponent(format: VkFormat): Boolean {
         return (
                 format == VkFormat.VK_FORMAT_D32_SFLOAT_S8_UINT ||
                         format == VkFormat.VK_FORMAT_D24_UNORM_S8_UINT
                 )
     }
 
-    fun createTextureImage() {
+    private fun createTextureImage() {
         // TODO: Set actual image bytes
         val texWidth = 1
         val texHeight = 1
@@ -1028,7 +1036,7 @@ class HelloTriangleApplication(private val delegate: Delegate) {
         vk.freeMemory(device, stagingBufferMemory)
     }
 
-    fun createTextureImageView() {
+    private fun createTextureImageView() {
         textureImageView = createImageView(
                 textureImage,
                 VkFormat.VK_FORMAT_R8G8B8A8_SRGB,
@@ -1036,7 +1044,7 @@ class HelloTriangleApplication(private val delegate: Delegate) {
         )
     }
 
-    fun createTextureSampler() {
+    private fun createTextureSampler() {
         val samplerInfo = VkSamplerCreateInfo(
                 VkStructureType.VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO,
                 flags = 0,
@@ -1060,7 +1068,7 @@ class HelloTriangleApplication(private val delegate: Delegate) {
         textureSampler = getProperty { vk.createSampler(device, samplerInfo, it) }
     }
 
-    fun createImageView(image: VkImage, format: VkFormat, aspectFlags: List<VkImageAspectFlagBits>): VkImageView {
+    private fun createImageView(image: VkImage, format: VkFormat, aspectFlags: List<VkImageAspectFlagBits>): VkImageView {
         val viewInfo = VkImageViewCreateInfo(
                 VkStructureType.VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO,
                 listOf(),
@@ -1079,7 +1087,7 @@ class HelloTriangleApplication(private val delegate: Delegate) {
         return getProperty { vk.createImageView(device, viewInfo, it) }
     }
 
-    fun createImage(
+    private fun createImage(
         width: Int,
         height: Int,
         format: VkFormat,
@@ -1121,7 +1129,7 @@ class HelloTriangleApplication(private val delegate: Delegate) {
         vk.bindImageMemory(device, imageNotNull, imageMemoryNotNull, 0)
     }
 
-    fun transitionImageLayout(
+    private fun transitionImageLayout(
         image: VkImage,
         format: VkFormat,
         oldLayout: VkImageLayout,
@@ -1213,7 +1221,7 @@ class HelloTriangleApplication(private val delegate: Delegate) {
         endSingleTimeCommands(commandBuffer)
     }
 
-    fun copyBufferToImage(
+    private fun copyBufferToImage(
         buffer: VkBuffer,
         image: VkImage,
         width: Int,
@@ -1245,7 +1253,7 @@ class HelloTriangleApplication(private val delegate: Delegate) {
         endSingleTimeCommands(commandBuffer)
     }
 
-    fun createVertexBuffer() {
+    private fun createVertexBuffer() {
         val bufferSize = (Vertex.SIZE * vertices.size).toLong()
 
         val stagingBufferRef = MutableProperty<VkBuffer>()
@@ -1292,7 +1300,7 @@ class HelloTriangleApplication(private val delegate: Delegate) {
         vk.freeMemory(device, stagingBufferMemory)
     }
 
-    fun createIndexBuffer() {
+    private fun createIndexBuffer() {
         val bufferSize = (INT_BYTE_SIZE * indices.size).toLong()
 
         val stagingBufferRef = MutableProperty<VkBuffer>()
@@ -1339,7 +1347,7 @@ class HelloTriangleApplication(private val delegate: Delegate) {
         vk.freeMemory(device, depthImageMemory)
     }
 
-    fun createUniformBuffers() {
+    private fun createUniformBuffers() {
         val bufferSize = UniformBufferObject.SIZE
         val uniformBuffers = mutableListOf<VkBuffer>()
         val uniformBuffersMemory = mutableListOf<VkDeviceMemory>()
@@ -1365,7 +1373,7 @@ class HelloTriangleApplication(private val delegate: Delegate) {
         this.uniformBuffersMemory = uniformBuffersMemory
     }
 
-    fun createDescriptorPool() {
+    private fun createDescriptorPool() {
         val poolSizes = listOf(
                 VkDescriptorPoolSize(
                         type = VkDescriptorType.VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
@@ -1387,7 +1395,7 @@ class HelloTriangleApplication(private val delegate: Delegate) {
         descriptorPool = getProperty { vk.createDescriptorPool(device, poolInfo, it) }
     }
 
-    fun createDescriptorSets() {
+    private fun createDescriptorSets() {
         val layouts = List(swapChainImages.size) { descriptorSetLayout }
         val allocateInfo = VkDescriptorSetAllocateInfo(
                 VkStructureType.VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO,
@@ -1439,7 +1447,7 @@ class HelloTriangleApplication(private val delegate: Delegate) {
         }
     }
 
-    fun createBuffer(
+    private fun createBuffer(
         size: VkDeviceSize,
         usage: List<VkBufferUsageFlagBits>,
         properties: List<VkMemoryPropertyFlagBits>,
@@ -1474,7 +1482,7 @@ class HelloTriangleApplication(private val delegate: Delegate) {
         vk.bindBufferMemory(device, buffer, bufferMemory, 0)
     }
 
-    fun beginSingleTimeCommands(): VkCommandBuffer {
+    private fun beginSingleTimeCommands(): VkCommandBuffer {
         val allocateInfo = VkCommandBufferAllocateInfo(
                 VkStructureType.VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO,
                 commandPool,
@@ -1496,7 +1504,7 @@ class HelloTriangleApplication(private val delegate: Delegate) {
         return commandBuffer
     }
 
-    fun endSingleTimeCommands(commandBuffer: VkCommandBuffer) {
+    private fun endSingleTimeCommands(commandBuffer: VkCommandBuffer) {
         vk.endCommandBuffer(commandBuffer)
 
         val submitInfo = VkSubmitInfo(
@@ -1513,7 +1521,7 @@ class HelloTriangleApplication(private val delegate: Delegate) {
         vk.freeCommandBuffers(device, commandPool, commandBuffers)
     }
 
-    fun copyBuffer(srcBuffer: VkBuffer, dstBuffer: VkBuffer, size: VkDeviceSize) {
+    private fun copyBuffer(srcBuffer: VkBuffer, dstBuffer: VkBuffer, size: VkDeviceSize) {
         val commandBuffer = beginSingleTimeCommands()
 
         val copyRegion = VkBufferCopy(
@@ -1527,7 +1535,7 @@ class HelloTriangleApplication(private val delegate: Delegate) {
         endSingleTimeCommands(commandBuffer)
     }
 
-    fun findMemoryType(typeFilter: Int, properties: List<VkMemoryPropertyFlagBits>): Int {
+    private fun findMemoryType(typeFilter: Int, properties: List<VkMemoryPropertyFlagBits>): Int {
         val computedProperties = properties.sumBy { it.bit }
         val memProperties: VkPhysicalDeviceMemoryProperties = getProperty {
             vk.getPhysicalDeviceMemoryProperties(physicalDevice, it)
@@ -1544,7 +1552,7 @@ class HelloTriangleApplication(private val delegate: Delegate) {
         throw IllegalStateException("Failed to find suitable memory type")
     }
 
-    fun createCommandBuffers() {
+    private fun createCommandBuffers() {
         val allocInfo = VkCommandBufferAllocateInfo(
                 VkStructureType.VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO,
                 commandPool = commandPool,
@@ -1618,7 +1626,7 @@ class HelloTriangleApplication(private val delegate: Delegate) {
         }
     }
 
-    fun createSyncObjects() {
+    private fun createSyncObjects() {
         val semaphoreCreateInfo = VkSemaphoreCreateInfo(VkStructureType.VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO)
         val fenceInfo = VkFenceCreateInfo(
                 sType = VkStructureType.VK_STRUCTURE_TYPE_FENCE_CREATE_INFO,
@@ -1639,7 +1647,7 @@ class HelloTriangleApplication(private val delegate: Delegate) {
         this.imagesInFlight = MutableList(inFlightFences.size) { null }
     }
 
-    fun updateUniformBuffer(currentImage: Int) {
+    private fun updateUniformBuffer(currentImage: Int) {
         val time = 1.0f / 60.0f
 
         val ubo = UniformBufferObject(
@@ -1732,7 +1740,7 @@ class HelloTriangleApplication(private val delegate: Delegate) {
         currentFrame = (currentFrame + 1) % MAX_FRAMES_IN_FLIGHT
     }
 
-    fun createShaderModule(code: ByteArray): VkShaderModule {
+    private fun createShaderModule(code: ByteArray): VkShaderModule {
         val createInfo = VkShaderModuleCreateInfo(
                 VkStructureType.VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO,
                 0,
@@ -1741,7 +1749,7 @@ class HelloTriangleApplication(private val delegate: Delegate) {
         return getProperty { vk.createShaderModule(device, createInfo, it) }
     }
 
-    fun chooseSwapSurfaceFormat(availableFormats: List<VkSurfaceFormatKHR>): VkSurfaceFormatKHR {
+    private fun chooseSwapSurfaceFormat(availableFormats: List<VkSurfaceFormatKHR>): VkSurfaceFormatKHR {
         for (availableFormat in availableFormats) {
             if (
                     availableFormat.format == VkFormat.VK_FORMAT_B8G8R8A8_SRGB &&
@@ -1753,7 +1761,7 @@ class HelloTriangleApplication(private val delegate: Delegate) {
         return availableFormats.first()
     }
 
-    fun chooseSwapPresentMode(availablePresentModes: List<VkPresentModeKHR>): VkPresentModeKHR {
+    private fun chooseSwapPresentMode(availablePresentModes: List<VkPresentModeKHR>): VkPresentModeKHR {
         for (availablePresentMode in availablePresentModes) {
             if (availablePresentMode == VkPresentModeKHR.VK_PRESENT_MODE_MAILBOX_KHR) {
                 return availablePresentMode
@@ -1762,7 +1770,7 @@ class HelloTriangleApplication(private val delegate: Delegate) {
         return VkPresentModeKHR.VK_PRESENT_MODE_FIFO_KHR
     }
 
-    fun chooseSwapExtent(capabilities: VkSurfaceCapabilitiesKHR): VkExtent2D {
+    private fun chooseSwapExtent(capabilities: VkSurfaceCapabilitiesKHR): VkExtent2D {
         return if (capabilities.currentExtent.width != Int.MAX_VALUE) {
             capabilities.currentExtent
         } else {
@@ -1780,7 +1788,7 @@ class HelloTriangleApplication(private val delegate: Delegate) {
         }
     }
 
-    fun querySwapChainSupport(device: VkPhysicalDevice): SwapChainSupportDetails {
+    private fun querySwapChainSupport(device: VkPhysicalDevice): SwapChainSupportDetails {
         val capabilities: VkSurfaceCapabilitiesKHR = getProperty {
             vk.getPhysicalDeviceSurfaceCapabilitiesKHR(device, surface, it)
         }
@@ -1798,7 +1806,7 @@ class HelloTriangleApplication(private val delegate: Delegate) {
         return SwapChainSupportDetails(capabilities, surfaceFormats, presentModes)
     }
 
-    fun isDeviceSuitable(device: VkPhysicalDevice): Boolean {
+    private fun isDeviceSuitable(device: VkPhysicalDevice): Boolean {
         val indices = findQueueFamilies(device)
 
         var swapChainAdequate = false
@@ -1812,16 +1820,23 @@ class HelloTriangleApplication(private val delegate: Delegate) {
         return indices.isComplete() && extensionsSupported && swapChainAdequate && supportedFeatures.samplerAnisotropy
     }
 
-    fun checkDeviceExtensionSupport(device: VkPhysicalDevice): Boolean {
+    private fun checkDeviceExtensionSupport(device: VkPhysicalDevice): Boolean {
         val properties: List<VkExtensionProperties> = getProperties {
             vk.enumerateDeviceExtensionProperties(device, null, it)
         }
         val requirements = delegate.getSwapchainExtensionNames().toMutableList()
-        requirements.removeAll(properties.map { it.extensionName })
+        requirements.removeAll {
+            for (property in properties) {
+                if (property.extensionName.startsWith(it)) {
+                    return@removeAll true
+                }
+            }
+            false
+        }
         return requirements.isEmpty()
     }
 
-    fun findQueueFamilies(device: VkPhysicalDevice): QueueFamilyIndices {
+    private fun findQueueFamilies(device: VkPhysicalDevice): QueueFamilyIndices {
         val queueFamilies = getProperties<VkQueueFamilyProperties> {
             vk.getPhysicalDeviceQueueFamilyProperties(device, it)
         }
@@ -1853,11 +1868,11 @@ class HelloTriangleApplication(private val delegate: Delegate) {
         return QueueFamilyIndices(graphicsFamily, presentFamily)
     }
 
-    fun getRequiredExtensions(): List<String> {
-        return getRequiredExtensions()
+    private fun getRequiredExtensions(): List<String> {
+        return delegate.getRequiredInstanceExtensions()
     }
 
-    fun checkValidationLayerSupport(): Boolean {
+    private fun checkValidationLayerSupport(): Boolean {
         val availableLayers: List<VkLayerProperties> = getProperties { vk.enumerateInstanceLayerProperties(it) }
         for (layerName in validationLayers) {
             var layerFound = false

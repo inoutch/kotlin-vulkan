@@ -123,25 +123,29 @@ task buildAppForXcode {
 task compileShaders {
     def shaderDir = "src/shaders"
     def buildShaderDir = "${buildDir}/shaders"
+    def names = ["triangle", "tutorialDepthBuffering"]
     mkdir(buildShaderDir)
     doLast {
-        exec {
-            workingDir shaderDir
-            commandLine "glslangValidator", "-e", "main", "-V", "-o", "${buildShaderDir}/triangle.vert.spv", "triangle.vert"
-        }
-        exec {
-            workingDir shaderDir
-            commandLine "glslangValidator", "-e", "main", "-V", "-o", "${buildShaderDir}/triangle.frag.spv", "triangle.frag"
-        }
-        exec {
-            workingDir buildShaderDir
-            commandLine "hexdump", "-e", '16/1 "0x%02x," "\\n"', "triangle.vert.spv"
-            standardOutput new FileOutputStream("${buildShaderDir}/triangle.vert.hex")
-        }
-        exec {
-            workingDir buildShaderDir
-            commandLine "hexdump", "-e", '16/1 "0x%02x," "\\n"', "triangle.frag.spv"
-            standardOutput new FileOutputStream("${buildShaderDir}/triangle.frag.hex")
+        names.forEach {
+            def name = it
+            exec {
+                workingDir shaderDir
+                commandLine "glslangValidator", "-e", "main", "-V", "-o", "${buildShaderDir}/${name}.vert.spv", "${name}.vert"
+            }
+            exec {
+                workingDir shaderDir
+                commandLine "glslangValidator", "-e", "main", "-V", "-o", "${buildShaderDir}/${name}.frag.spv", "${name}.frag"
+            }
+            exec {
+                workingDir buildShaderDir
+                commandLine "hexdump", "-e", '16/1 "0x%02x," "\\n"', "${name}.vert.spv"
+                standardOutput new FileOutputStream("${buildShaderDir}/${name}.vert.hex")
+            }
+            exec {
+                workingDir buildShaderDir
+                commandLine "hexdump", "-e", '16/1 "0x%02x," "\\n"', "${name}.frag.spv"
+                standardOutput new FileOutputStream("${buildShaderDir}/${name}.frag.hex")
+            }
         }
     }
 }
