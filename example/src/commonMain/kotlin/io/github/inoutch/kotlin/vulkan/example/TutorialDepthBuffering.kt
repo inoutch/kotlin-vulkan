@@ -239,7 +239,7 @@ class UniformBufferObject(
 }
 
 val vertices = listOf(
-        listOf(listOf(-0.5f, -0.5f, 0.0f), listOf(-0.5f, -0.5f, 0.0f), listOf(1.0f, 0.0f)),
+        listOf(listOf(-0.5f, -0.5f, 0.0f), listOf(1.0f, 0.0f, 0.0f), listOf(1.0f, 0.0f)),
         listOf(listOf(0.5f, -0.5f, 0.0f), listOf(0.0f, 1.0f, 0.0f), listOf(0.0f, 0.0f)),
         listOf(listOf(0.5f, 0.5f, 0.0f), listOf(0.0f, 0.0f, 1.0f), listOf(0.0f, 1.0f)),
         listOf(listOf(-0.5f, 0.5f, 0.0f), listOf(1.0f, 1.0f, 1.0f), listOf(1.0f, 1.0f)),
@@ -768,7 +768,7 @@ class HelloTriangleApplication(private val delegate: Delegate) {
                 VkStructureType.VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO,
                 flags = 0,
                 polygonMode = VkPolygonMode.VK_POLYGON_MODE_FILL,
-                cullMode = VkCullModeFlagBits.VK_CULL_MODE_BACK_BIT,
+                cullMode = VkCullModeFlagBits.VK_CULL_MODE_NONE,
                 frontFace = VkFrontFace.VK_FRONT_FACE_COUNTER_CLOCKWISE,
                 depthClampEnable = false,
                 rasterizerDiscardEnable = false,
@@ -1662,10 +1662,11 @@ class HelloTriangleApplication(private val delegate: Delegate) {
         this.imagesInFlight = MutableList(swapChainImages.size) { null }
     }
 
+    var time = 0.0f
     private fun updateUniformBuffer(currentImage: Int) {
-        val time = 1.0f / 60.0f
+        time += 1.0f / 60.0f
 
-        /* val ubo = UniformBufferObject(
+        val ubo = UniformBufferObject(
                 Mat4.createRotation(Vec3(0.0f, 0.0f, 1.0f), time),
                 Mat4.createLookAt(Vec3(2.0f, 2.0f, 2.0f), Vec3(0.0f, 0.0f, 0.0f), Vec3(0.0f, 0.0f, 1.0f)),
                 Mat4.createPerspective(
@@ -1674,11 +1675,6 @@ class HelloTriangleApplication(private val delegate: Delegate) {
                         0.1f,
                         10.0f
                 )
-        ) */
-        val ubo = UniformBufferObject(
-                Mat4.createIdentity(),
-                Mat4.createIdentity(),
-                Mat4.createIdentity()
         )
 
         val floatArray = ubo.flatten()

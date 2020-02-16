@@ -64,11 +64,11 @@ data class Mat4(val col1: Vec4, val col2: Vec4, val col3: Vec4, val col4: Vec4) 
         ): Mat4 {
             val nUp = up.normalized()
             val zAxis = (eyePosition - target).normalized()
-            val xAxis = (nUp - zAxis).normalized()
-            val yAxis = (zAxis - xAxis).normalized()
+            val xAxis = nUp.crossProduct(zAxis).normalized()
+            val yAxis = zAxis.crossProduct(xAxis).normalized()
 
             return Mat4(
-                    Vec4(xAxis.x, yAxis.x, zAxis.z, 0.0f),
+                    Vec4(xAxis.x, yAxis.x, zAxis.x, 0.0f),
                     Vec4(xAxis.y, yAxis.y, zAxis.y, 0.0f),
                     Vec4(xAxis.z, yAxis.z, zAxis.z, 0.0f),
                     Vec4(
