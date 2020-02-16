@@ -29,16 +29,25 @@ actual class MappedMemory actual constructor(size: Long) {
     }
 
     actual fun copy(offset: Long, size: Long, array: FloatArray) = memScoped {
+        check(offset * FLOAT_SIZE + size * FLOAT_SIZE <= bytesSize) {
+            "Access outside the allocated memory range"
+        }
         val buffer = array.toNative(this)
         MemoryUtil.memCopy(MemoryUtil.memAddress(buffer), native + offset * FLOAT_SIZE, size * FLOAT_SIZE)
     }
 
     actual fun copy(offset: Long, size: Long, array: IntArray) = memScoped {
+        check(offset * INT_SIZE + size * INT_SIZE <= bytesSize) {
+            "Access outside the allocated memory range"
+        }
         val buffer = array.toNative(this)
         MemoryUtil.memCopy(MemoryUtil.memAddress(buffer), native + offset * INT_SIZE, size * INT_SIZE)
     }
 
     actual fun copy(offset: Long, size: Long, array: ByteArray) = memScoped {
+        check(offset + size <= bytesSize) {
+            "Access outside the allocated memory range"
+        }
         val buffer = array.toNative(this)
         MemoryUtil.memCopy(MemoryUtil.memAddress(buffer), native + offset, size)
     }
