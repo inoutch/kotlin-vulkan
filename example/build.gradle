@@ -43,6 +43,12 @@ kotlin {
                 implementation project(":kotlin-vulkan")
             }
         }
+        commonTest {
+            dependencies {
+                implementation "org.jetbrains.kotlin:kotlin-test-common:$kotlinVersion"
+                implementation "org.jetbrains.kotlin:kotlin-test-annotations-common:$kotlinVersion"
+            }
+        }
         jvmMain {
             dependencies {
                 implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlinVersion"
@@ -60,6 +66,13 @@ kotlin {
                 if (platform == org.gradle.internal.os.OperatingSystem.MAC_OS) {
                     runtimeOnly "org.lwjgl:lwjgl-vulkan:$lwjglVersion:$lwjglNatives"
                 }
+            }
+        }
+        jvmTest {
+            dependencies {
+                implementation "org.jetbrains.kotlin:kotlin-test:$kotlinVersion"
+                implementation "org.jetbrains.kotlin:kotlin-test-junit:$kotlinVersion"
+                implementation "org.jetbrains.kotlin:kotlin-reflect:$kotlinVersion"
             }
         }
         iosArm64Main {
