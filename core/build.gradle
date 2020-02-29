@@ -37,7 +37,7 @@ kotlin {
         compilations.main {
             cinterops {
                 vulkan_ios {
-                    includeDirs "${System.getenv()["VULKAN_SDK"]}/MoltenVK/include"
+                    includeDirs "../build/externals/MoltenVK/include"
                 }
                 mvkview {
                     includeDirs "./src/iosArm64Main/objc/MVKView"
@@ -151,7 +151,7 @@ publishing.repositories.maven { url "file://${repo.absolutePath}" }
 // HACK: https://github.com/JetBrains/kotlin-native/issues/2314
 task copyNativeLibs(type: Copy) {
     from "${System.getenv()["VULKAN_SDK"]}/MoltenVK"
-    into "build/externals/MoltenVK"
+    into "../build/externals/MoltenVK"
 }
 
 cinteropVulkan_iosIosArm64.dependsOn copyNativeLibs

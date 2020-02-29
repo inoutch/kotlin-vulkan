@@ -388,7 +388,8 @@ actual object vk {
                 dstImageLayout.value.toUInt(),
                 srcBuffer.native,
                 regions.size.toUInt(),
-                regions.toNative(this))
+                regions.toNative(this)
+        )
     }
 
     actual fun cmdBindDescriptorSets(
@@ -461,9 +462,11 @@ actual object vk {
         val result = vkAllocateDescriptorSets(device.native, allocateInfo.toNative(this), native).toVkResult()
         if (result.isSucceeded()) {
             allocateInfo.descriptorSetCount.forEachIndexes {
-                VkDescriptorSet().apply {
-                    init(native[it] ?: throw IllegalStateException("descriptorSet is null"))
-                }
+                descriptorSets.add(
+                        VkDescriptorSet().apply {
+                            init(native[it] ?: throw IllegalStateException("descriptorSet is null"))
+                        }
+                )
             }
         }
         result
@@ -485,7 +488,8 @@ actual object vk {
                 descriptorWrites.size.toUInt(),
                 descriptorWrites.toNative(this),
                 descriptorCopies.size.toUInt(),
-                descriptorCopies.toNative(this))
+                descriptorCopies.toNative(this)
+        )
     }
 
     actual fun createDescriptorSetLayout(

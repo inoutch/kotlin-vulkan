@@ -37,7 +37,7 @@ enum class VkResult(val value: Int) {
     VK_ERROR_INVALID_EXTERNAL_HANDLE_KHR(VK_ERROR_INVALID_EXTERNAL_HANDLE.value),
     VK_RESULT_MAX_ENUM(0x7FFFFFFF);
     companion object {
-        private val resultMap = VkResult.values().map { it.value to it }.toMap()
+        private val resultMap = values().map { it.value to it }.toMap()
         fun getValue(value: Int): VkResult = resultMap.getValue(value)
     }
 

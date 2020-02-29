@@ -1,8 +1,10 @@
 import io.github.inoutch.kotlin.vulkan.api.VkExtent2D
 import io.github.inoutch.kotlin.vulkan.api.VkInstance
+import io.github.inoutch.kotlin.vulkan.api.VkResult
 import io.github.inoutch.kotlin.vulkan.api.VkSurface
 import io.github.inoutch.kotlin.vulkan.api.vk
 import io.github.inoutch.kotlin.vulkan.example.Application
+import io.github.inoutch.kotlin.vulkan.example.HelloTriangleApplication
 import io.github.inoutch.kotlin.vulkan.example.VK
 import io.github.inoutch.kotlin.vulkan.utility.MutableProperty
 import kotlinx.cinterop.ExportObjCClass
@@ -37,7 +39,7 @@ class ViewController : UIViewController, UITextFieldDelegateProtocol {
 
     private lateinit var vkContext: VK
 
-    private lateinit var application: Application
+    private lateinit var application: HelloTriangleApplication
 
     @OverrideInit
     @Suppress("ConvertSecondaryConstructorToPrimary")
@@ -58,23 +60,51 @@ class ViewController : UIViewController, UITextFieldDelegateProtocol {
         windowSize = UIScreen.mainScreen.nativeBounds.useContents {
             VkExtent2D(size.width.toInt(), size.height.toInt())
         }
-        val title = "Kotlin Vulkan for JVM"
+        if (true) {
+            val viewController = this
+            application = HelloTriangleApplication(object : HelloTriangleApplication.Delegate {
+                override fun getSwapchainExtensionNames(): List<String> {
+                    return listOf("VK_KHR_swapchain")
+                }
+
+                override fun createSurface(instance: VkInstance, surface: MutableProperty<VkSurface>): VkResult {
+                    return viewController.createSurface(instance, surface)
+                }
+
+                override fun getRequiredInstanceExtensions(): List<String> {
+                    return listOf("VK_KHR_surface", "VK_MVK_ios_surface")
+                }
+
+                override fun getFramebufferSize(width: MutableProperty<Int>, height: MutableProperty<Int>) {
+                    width set windowSize.width
+                    height set windowSize.height
+                }
+
+                override fun destroy() {
+                    TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+                }
+            })
+            application.initVulkan()
+            return
+        }
+        /*val title = "Kotlin Vulkan for JVM"
         vkContext = VK(
-                title,
-                title,
-                emptyList(),
-                listOf("VK_KHR_surface", "VK_MVK_ios_surface"),
-                emptyList(),
-                listOf("VK_KHR_swapchain"), windowSize) { surface, instance ->
+                applicationName = title,
+                engineName = title,
+                enableLayerNames = emptyList(),
+                enableExtensionNames = listOf("VK_KHR_surface", "VK_MVK_ios_surface"),
+                enableDeviceLayerNames = emptyList(),
+                enableDeviceExtensionNames = listOf("VK_KHR_swapchain"), windowSize = windowSize) { surface, instance ->
             createSurface(instance, surface)
         }
-        application = Application(vkContext)
+        application = Application(vkContext)*/
     }
 
     @Suppress("UNUSED_PARAMETER")
     @ObjCAction
     fun render(sender: CADisplayLink) {
-        application.render()
+//        application.render()
+        application.drawFrame()
     }
 
     private fun createSurface(instance: VkInstance, surfaceRef: MutableProperty<VkSurface>) = memScoped {

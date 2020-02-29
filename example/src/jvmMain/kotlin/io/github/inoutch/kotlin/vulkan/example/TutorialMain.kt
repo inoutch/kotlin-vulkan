@@ -36,7 +36,7 @@ fun tutorialMain(args: Array<String>) {
     glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE)
 
     val title = "Kotlin Vulkan for JVM"
-    val windowSize = VkExtent2D(300, 300)
+    val windowSize = VkExtent2D(600, 600)
     val window = glfwCreateWindow(windowSize.width, windowSize.height, title, MemoryUtil.NULL, MemoryUtil.NULL)
 
     val requiredExtensions = glfwGetRequiredInstanceExtensions()

@@ -2,4 +2,4 @@ language = Objective-C
 headers = MVKView.h
 
 staticLibraries = libMVKView.a
-libraryPaths = ../xcode/build/Release
+libraryPaths = ../../xcode/build/Release
